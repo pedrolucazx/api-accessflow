@@ -9,7 +9,8 @@
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "start:dev": "ts-node-dev --respawn src/index.ts"
+    "start:dev": "ts-node-dev --respawn src/index.ts",
+    "docker:dev": "docker compose -f docker-compose.yml up database"
   },
   "keywords": [],
   "author": "",
@@ -17,7 +18,10 @@
   "description": "",
   "dependencies": {
     "@apollo/server": "^4.11.2",
-    "graphql": "^16.9.0"
+    "dotenv": "^16.4.5",
+    "graphql": "^16.9.0",
+    "knex": "^3.1.0",
+    "pg": "^8.13.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.0",

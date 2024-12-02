@@ -1,25 +1,29 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
+import Knex from 'knex';
+import knexConfig from '../knexfile';
+
+const knex = Knex(knexConfig.development);
 
 const startServer = async () => {
   const typeDefs = `#graphql
-    type Book {
-      title: String
-      author: String
-    }
-
     type Query {
-      books: [Book]
+      testDatabaseConnection: String
     }
   `;
 
-  const books = [
-    { title: 'The Awakening', author: 'Kate Chopin' },
-    { title: 'City of Glass', author: 'Paul Auster' },
-  ];
-
   const resolvers = {
-    Query: { books: () => books },
+    Query: {
+      testDatabaseConnection: async () => {
+        try {
+          await knex.raw('SELECT 1+1 AS result');
+          return '✅ Database connection successful!';
+        } catch (error) {
+          console.error('❌ Database connection failed:', error);
+          return '❌ Failed to connect to the database.';
+        }
+      },
+    },
   };
 
   const server = new ApolloServer({ typeDefs, resolvers });
@@ -28,7 +32,7 @@ const startServer = async () => {
     listen: { port: 4000 },
   });
 
-  console.warn(`🚀  Server ready at: ${url}`);
+  console.warn(`🚀 Server ready at: ${url}`);
 };
 
 startServer();
