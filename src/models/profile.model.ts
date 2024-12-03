@@ -17,7 +17,12 @@ type ProfileMethods = {
 export const profileModel: ProfileMethods = {
   getAllProfiles: async (): Promise<Profile[]> => {
     try {
-      return database<Profile>('perfis').select('*');
+      const profiles = await database<Profile>('perfis').select('*');
+      if (!profiles.length) {
+        throw new Error('No profiles found.');
+      }
+
+      return profiles;
     } catch (error) {
       console.error('Error fetching profiles:', error);
       throw new Error('Could not fetch profiles.');
@@ -28,7 +33,11 @@ export const profileModel: ProfileMethods = {
     params: Partial<Profile>,
   ): Promise<Profile | undefined> => {
     try {
-      return await database<Profile>('perfis').where(params).first();
+      const profile = await database<Profile>('perfis').where(params).first();
+      if (!profile) {
+        throw new Error('Profile not found');
+      }
+      return profile;
     } catch (error) {
       console.error('Error fetching profile by parameters:', error);
       throw new Error('Could not fetch profile by parameters.');
