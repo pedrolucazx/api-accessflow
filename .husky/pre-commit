@@ -1,5 +1,5 @@
-# echo "🔍 Running tests..."
-# pnpm test || { echo "❌ Tests failed. Fix the errors before committing."; exit 1; }
+echo "🔍 Running tests..."
+yarn test || { echo "❌ Tests failed. Fix the errors before committing."; exit 1; }
 
 echo "✨ Running lint-staged..."
 yarn lint-staged
