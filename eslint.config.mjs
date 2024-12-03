@@ -63,9 +63,4 @@ export default [
       'jest/valid-expect': 'error',
     },
   },
-  {
-    globals: {
-      db: 'readonly',
-    },
-  },
 ];
