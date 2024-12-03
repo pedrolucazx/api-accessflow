@@ -1,18 +1,5 @@
 import database from '../database/index';
-
-export interface Profile {
-  id?: number;
-  nome: string;
-  descricao?: string;
-}
-
-type ProfileMethods = {
-  getAllProfiles(): Promise<Profile[]>;
-  getProfileByParams(params: Partial<Profile>): Promise<Profile | undefined>;
-  createProfile(profile: Profile): Promise<number[]>;
-  updateProfile(id: number, profile: Partial<Profile>): Promise<number>;
-  deleteProfile(id: number): Promise<number>;
-};
+import { Profile, ProfileMethods } from '../types/profiles.types';
 
 export const profileModel: ProfileMethods = {
   getAllProfiles: async (): Promise<Profile[]> => {
@@ -29,9 +16,7 @@ export const profileModel: ProfileMethods = {
     }
   },
 
-  getProfileByParams: async (
-    params: Partial<Profile>,
-  ): Promise<Profile | undefined> => {
+  getProfileByParams: async (params: Partial<Profile>): Promise<Profile> => {
     try {
       const profile = await database<Profile>('perfis').where(params).first();
       if (!profile) {

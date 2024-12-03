@@ -1,5 +1,6 @@
-import { profileModel, Profile } from '../../models/profile.model';
+import { profileModel } from '../../models/profile.model';
 import database from '../../database/index';
+import { Profile } from '../../types/profiles.types';
 
 describe('Profile Model Unit Tests: Success Cases', () => {
   const testProfile: Profile = {
