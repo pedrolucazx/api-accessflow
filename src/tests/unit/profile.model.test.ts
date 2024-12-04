@@ -69,7 +69,7 @@ describe('Profile Model Unit Tests: Success Cases', () => {
 });
 
 describe('Profile Model Unit Tests: Error Cases', () => {
-  it('should handle error when creating a profile with invalid data', async () => {
+  it('should throw an error when creating a profile with invalid data', async () => {
     const invalidProfile = {};
     jest.spyOn(database, 'insert').mockResolvedValueOnce(invalidProfile);
 
@@ -88,7 +88,7 @@ describe('Profile Model Unit Tests: Error Cases', () => {
     );
   });
 
-  it('should handle error when fetching profiles by invalid params', async () => {
+  it('should throw an error when fetching profiles by invalid params', async () => {
     jest.spyOn(database, 'where').mockResolvedValueOnce([]);
 
     await expect(profileModel.getProfileByParams({ id: -1 })).rejects.toThrow(
@@ -96,7 +96,7 @@ describe('Profile Model Unit Tests: Error Cases', () => {
     );
   });
 
-  it('should handle error when updating a non-existent profile', async () => {
+  it('should throw an error when updating a non-existent profile', async () => {
     jest.spyOn(database, 'where').mockResolvedValueOnce([]);
 
     await expect(
@@ -104,7 +104,7 @@ describe('Profile Model Unit Tests: Error Cases', () => {
     ).rejects.toThrow('Could not update profile with ID 9999.');
   });
 
-  it('should handle error when deleting a non-existent profile', async () => {
+  it('should throw an error when deleting a non-existent profile', async () => {
     jest.spyOn(database, 'where').mockResolvedValueOnce([]);
 
     await expect(profileModel.deleteProfile(9999)).rejects.toThrow(
