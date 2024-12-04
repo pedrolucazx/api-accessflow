@@ -79,6 +79,12 @@ describe('Profile Model Integration Tests: Success Cases', () => {
 });
 
 describe('Profile Model Integration Tests: Error Cases', () => {
+  it('should throw an error when trying to fetch a profiles', async () => {
+    await expect(profileModel.getAllProfiles()).rejects.toThrow(
+      'Could not fetch profiles.',
+    );
+  });
+
   it('should throw an error when trying to fetch a non-existent profile', async () => {
     await expect(
       profileModel.getProfileByParams({ nome: 'NonExistent' }),
