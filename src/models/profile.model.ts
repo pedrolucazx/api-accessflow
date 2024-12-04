@@ -1,7 +1,7 @@
 import database from '../database/index';
-import { Profile, ProfileMethods } from '../types/profiles.types';
+import { Profile, ProfileModel } from '../types/profiles.types';
 
-export const profileModel: ProfileMethods = {
+export const profileModel: ProfileModel = {
   getAllProfiles: async (): Promise<Profile[]> => {
     try {
       const profiles = await database<Profile>('perfis').select('*');
