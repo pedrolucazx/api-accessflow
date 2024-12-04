@@ -110,6 +110,22 @@ describe('Profile Service Unit Tests: Error Cases', () => {
     expect(profileModel.getProfileByParams).toHaveBeenCalledTimes(1);
   });
 
+  it('should throw an error when creating a profile', async () => {
+    (profileModel.createProfile as jest.Mock).mockRejectedValue(
+      new Error('Database error'),
+    );
+
+    await expect(
+      profileService.createProfile({
+        nome: 'New Profile',
+        descricao: 'New Profile',
+      }),
+    ).rejects.toThrow(
+      'Unable to create a new profile. Please try again later.',
+    );
+    expect(profileModel.createProfile).toHaveBeenCalledTimes(1);
+  });
+
   it('should throw an error if profile to update is not found', async () => {
     (profileModel.getProfileByParams as jest.Mock).mockResolvedValue(null);
     await expect(profileService.updateProfile(1, {})).rejects.toThrow(
@@ -157,5 +173,25 @@ describe('Profile Service Unit Tests: Error Cases', () => {
       id: 1,
     });
     expect(profileModel.updateProfile as jest.Mock).not.toHaveBeenCalled();
+  });
+
+  it('should throw an error when trying to delete a non-existent profile', async () => {
+    (profileModel.deleteProfile as jest.Mock).mockResolvedValue(false);
+
+    await expect(profileService.deleteProfile(1)).rejects.toThrow(
+      `Profile with ID 1 not found. Deletion operation failed.`,
+    );
+    expect(profileModel.deleteProfile).toHaveBeenCalledTimes(1);
+  });
+
+  it('should throw an error when deleting a profile', async () => {
+    (profileModel.deleteProfile as jest.Mock).mockRejectedValue(
+      new Error('Database error'),
+    );
+
+    await expect(profileService.deleteProfile(1)).rejects.toThrow(
+      `Unable to delete the profile with ID 1. Please try again later.`,
+    );
+    expect(profileModel.deleteProfile).toHaveBeenCalledTimes(1);
   });
 });
