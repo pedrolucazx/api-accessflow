@@ -12,6 +12,7 @@ Este projeto é uma API de gerenciamento de usuários e perfis com GraphQL, cons
 - **Docker**: Configuração do ambiente de banco de dados.
 - **ESLint** e **Prettier**: Qualidade e formatação do código.
 - **Husky**, **Commitizen**, **lint-staged** e **commitlint**: Boas práticas para controle de versões.
+- **Jest** e **Supertest**: Ferramentas para testes automatizados.
 
 ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
@@ -24,6 +25,8 @@ Este projeto é uma API de gerenciamento de usuários e perfis com GraphQL, cons
 ![Prettier](https://img.shields.io/badge/prettier-%23F7B93E.svg?style=for-the-badge&logo=prettier&logoColor=black)
 ![Husky](https://img.shields.io/badge/Husky-%23454A64.svg?style=for-the-badge&logo=husky&logoColor=white)
 ![Commitizen](https://img.shields.io/badge/Commitizen-%23FE6B37.svg?style=for-the-badge&logo=commitizen&logoColor=white)
+![Jest](https://img.shields.io/badge/Jest-%23C21325.svg?style=for-the-badge&logo=jest&logoColor=white)
+![Supertest](https://img.shields.io/badge/Supertest-%23007ACC.svg?style=for-the-badge&logo=testing-library&logoColor=white)
 
 ## 🛠️ Funcionalidades
 
