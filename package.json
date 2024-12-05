@@ -21,6 +21,8 @@
   "description": "",
   "dependencies": {
     "@apollo/server": "^4.11.2",
+    "@graphql-tools/load-files": "^7.0.0",
+    "@graphql-tools/merge": "^9.0.12",
     "dotenv": "^16.4.5",
     "graphql": "^16.9.0",
     "knex": "^3.1.0",
