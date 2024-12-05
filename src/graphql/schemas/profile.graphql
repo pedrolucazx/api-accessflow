@@ -1,23 +1,23 @@
 type Profile {
-  id: ID!
-  name: String!
-  description: String
+  id: Int!
+  nome: String!
+  descricao: String
 }
 
 input ProfileInput {
-  name: String!
-  description: String
+  nome: String!
+  descricao: String
 }
 
 input ProfileUpdateInput {
-  name: String
-  description: String
+  nome: String
+  descricao: String
 }
 
 input ProfileFilterInput {
-  id: ID
-  name: String
-  description: String
+  id: Int
+  nome: String
+  descricao: String
 }
 
 type Query {
@@ -27,6 +27,6 @@ type Query {
 
 type Mutation {
   createProfile(input: ProfileInput!): Profile!
-  updateProfile(id: ID!, input: ProfileUpdateInput!): Profile!
-  deleteProfile(id: ID!): String!
+  updateProfile(id: Int!, input: ProfileUpdateInput!): Profile!
+  deleteProfile(id: Int!): String!
 }
