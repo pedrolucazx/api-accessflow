@@ -19,3 +19,9 @@ export interface ProfileService {
   updateProfile: (id: number, profile: Partial<Profile>) => Promise<Profile>;
   deleteProfile: (id: number) => Promise<string>;
 }
+
+export type argsType = {
+  id: number;
+  input: Profile;
+  filter: Partial<Profile>;
+};
