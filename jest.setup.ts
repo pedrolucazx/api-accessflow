@@ -10,6 +10,7 @@ const database = knex(dbConfig);
 
 beforeAll(async () => {
   await database.migrate.latest({ directory: './src/database/migrations' });
+  await database.seed.run({ directory: './src/database/seeds' });
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });
 
@@ -30,3 +31,5 @@ afterAll(async () => {
 });
 
 jest.mock('./src/database/index', () => database);
+
+export default database;
