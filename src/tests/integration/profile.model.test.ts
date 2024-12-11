@@ -1,111 +1,67 @@
+import database from '../../../jest.setup';
 import { profileModel } from '../../models/profile.model';
-import database from '../../database/index';
 import { Profile } from '../../types/profiles.types';
 
-describe('Profile Model Integration Tests: Success Cases', () => {
-  it('should return all profiles from the database', async () => {
-    const mockProfiles: Profile[] = [
-      { nome: 'Admin', descricao: 'Administrator' },
-      { nome: 'User', descricao: 'Regular user' },
-    ];
+describe('Profile Model Integration Tests', () => {
+  it('should return all profiles', async () => {
+    const fetchedProfiles = await profileModel.getAllProfiles();
 
-    await database('perfis').insert(mockProfiles);
-
-    const profiles = await profileModel.getAllProfiles();
-
-    expect(profiles).toHaveLength(2);
-    expect(profiles).toEqual(
+    expect(fetchedProfiles).toHaveLength(2);
+    expect(fetchedProfiles).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ nome: 'Admin', descricao: 'Administrator' }),
-        expect.objectContaining({ nome: 'User', descricao: 'Regular user' }),
+        expect.objectContaining({
+          nome: 'admin',
+          descricao: 'Administrador',
+        }),
+        expect.objectContaining({ nome: 'comum', descricao: 'Comum' }),
       ]),
     );
   });
 
   it('should return a specific profile matching the parameters', async () => {
-    const mockProfile: Profile = {
-      nome: 'Admin',
-      descricao: 'Administrator',
-    };
-    await database('perfis').insert(mockProfile);
+    const profile = await profileModel.getProfileByParams({ nome: 'admin' });
 
-    const profile = await profileModel.getProfileByParams({ nome: 'Admin' });
-
-    expect(profile).toEqual(expect.objectContaining(mockProfile));
+    expect(profile).toEqual(
+      expect.objectContaining({ nome: 'admin', descricao: 'Administrador' }),
+    );
   });
 
-  it('should insert a new profile into the database', async () => {
-    const newProfile: Profile = {
-      nome: 'NewProfile',
-      descricao: 'A new profile',
-    };
+  it('should create a profile and return the inserted ID', async () => {
+    const profile = { nome: 'New Profile', descricao: 'New Profile' };
 
-    const result = await profileModel.createProfile(newProfile);
-    const insertedProfile = await database('perfis')
-      .where({ id: result[0] })
+    const result = await profileModel.createProfile(profile);
+
+    expect(result).toBeDefined();
+    expect(Array.isArray(result)).toBe(true);
+    expect(result?.length).toBeGreaterThan(0);
+
+    const count = await database('perfis')
+      .where('id', result![0])
+      .count('id as cnt')
+      .first();
+    expect(count?.cnt).toBe(1);
+  });
+
+  it('should update a profile and return the number of affected rows', async () => {
+    const latestProfile = await database<Profile>('perfis')
+      .select('id')
+      .orderBy('id', 'desc')
       .first();
 
-    expect(insertedProfile).toEqual(expect.objectContaining(newProfile));
+    const id = latestProfile?.id;
+    const updatedProfile = { nome: 'Updated', descricao: 'Updated' };
+    const updatedRows = await profileModel.updateProfile(id!, updatedProfile);
+    expect(updatedRows).toBe(1);
   });
 
-  it('should update an existing profile', async () => {
-    const mockProfile: Profile = {
-      nome: 'ToUpdate',
-      descricao: 'Old Description',
-    };
-    const [id] = await database('perfis').insert(mockProfile);
+  it('should delete a profile and return the number of affected rows', async () => {
+    const latestProfile = await database<Profile>('perfis')
+      .select('id')
+      .orderBy('id', 'desc')
+      .first();
 
-    const updates = { descricao: 'New Description' };
-    await profileModel.updateProfile(id, updates);
-
-    const updatedProfile = await database('perfis').where({ id }).first();
-    expect(updatedProfile).toEqual(
-      expect.objectContaining({ ...mockProfile, ...updates }),
-    );
-  });
-
-  it('should delete a profile from the database', async () => {
-    const mockProfile: Profile = {
-      nome: 'ToDelete',
-      descricao: 'A profile to delete',
-    };
-    const [id] = await database('perfis').insert(mockProfile);
-
-    await profileModel.deleteProfile(id);
-    const deletedProfile = await database('perfis').where({ id }).first();
-
-    expect(deletedProfile).toBeUndefined();
-  });
-});
-
-describe('Profile Model Integration Tests: Error Cases', () => {
-  it('should throw an error when trying to fetch a profiles', async () => {
-    await expect(profileModel.getAllProfiles()).rejects.toThrow(
-      'Could not fetch profiles.',
-    );
-  });
-
-  it('should throw an error when trying to fetch a non-existent profile', async () => {
-    await expect(
-      profileModel.getProfileByParams({ nome: 'NonExistent' }),
-    ).rejects.toThrow('Could not fetch profile by parameters.');
-  });
-
-  it('should throw an error when trying to create an invalid profile', async () => {
-    await expect(profileModel.createProfile({} as Profile)).rejects.toThrow(
-      'Could not create profile.',
-    );
-  });
-
-  it('should throw an error when trying to update a non-existent profile', async () => {
-    await expect(profileModel.updateProfile(-1, {} as Profile)).rejects.toThrow(
-      'Could not update profile with ID -1.',
-    );
-  });
-
-  it('should throw an error when trying to delete a non-existent profile', async () => {
-    await expect(profileModel.deleteProfile(9999)).rejects.toThrow(
-      'Could not delete profile with ID 9999.',
-    );
+    const id = latestProfile?.id;
+    const deleteRows = await profileModel.deleteProfile(id!);
+    expect(deleteRows).toBe(1);
   });
 });

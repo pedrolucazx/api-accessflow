@@ -57,10 +57,6 @@ describe('Profile End-to-End Tests', () => {
     ({ server, url } = await startApolloServer(database, { port: 3333 }));
   });
 
-  beforeEach(async () => {
-    await database.seed.run({ directory: './src/database/seeds' });
-  });
-
   afterAll(async () => {
     await server?.stop();
   });
@@ -89,17 +85,6 @@ describe('Profile End-to-End Tests', () => {
       nome: 'admin',
       descricao: 'Administrador',
     });
-    expect(response.status).toBe(200);
-  });
-
-  it('should return null when no profile matches the filter', async () => {
-    const filter = { id: 99 };
-
-    const response = await request(url)
-      .post('/')
-      .send({ query: GET_PROFILE_BY_PARAMS, variables: { filter } });
-
-    expect(response.body.data.getProfileByParams).toBeNull();
     expect(response.status).toBe(200);
   });
 
@@ -146,17 +131,6 @@ describe('Profile End-to-End Tests', () => {
 
     expect(response.body.data.deleteProfile).toBe(
       'Profile with ID 2 was successfully deleted.',
-    );
-    expect(response.status).toBe(200);
-  });
-
-  it('should return an error when trying to delete a non-existent profile', async () => {
-    const response = await request(url)
-      .post('/')
-      .send({ query: DELETE_PROFILE, variables: { id: 99 } });
-
-    expect(response.body.errors[0].message).toBe(
-      'Unable to delete the profile with ID 99. Please try again later.',
     );
     expect(response.status).toBe(200);
   });

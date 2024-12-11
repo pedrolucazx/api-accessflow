@@ -2,113 +2,142 @@ import { profileModel } from '../../models/profile.model';
 import database from '../../database/index';
 import { Profile } from '../../types/profiles.types';
 
-describe('Profile Model Unit Tests: Success Cases', () => {
-  const testProfile: Profile = {
-    nome: 'Admin',
-    descricao: 'Perfil de Administrador',
-  };
+jest.mock('../../database/index');
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should create a profile', async () => {
-    const profileId = await profileModel.createProfile(testProfile);
-
-    expect(profileId).toHaveLength(1);
-    const createdProfile = await database<Profile>('perfis')
-      .where({ id: profileId[0] })
-      .first();
-    expect(createdProfile).toMatchObject(testProfile);
-  });
-
-  it('should fetch all profiles', async () => {
-    await profileModel.createProfile(testProfile);
-
-    const profiles = await profileModel.getAllProfiles();
-    expect(profiles.length).toBeGreaterThan(0);
-    expect(profiles).toEqual(
-      expect.arrayContaining([expect.objectContaining(testProfile)]),
-    );
-  });
-
-  it('should fetch profile by params', async () => {
-    const [profileId] = await profileModel.createProfile(testProfile);
-
-    const profile = await profileModel.getProfileByParams({ id: profileId });
-    expect(profile).toMatchObject(testProfile);
-  });
-
-  it('should update a profile', async () => {
-    const [profileId] = await profileModel.createProfile(testProfile);
-
-    const updatedProfile = { nome: 'Admin Updated' };
-    const rowsUpdated = await profileModel.updateProfile(
-      profileId,
-      updatedProfile,
-    );
-    expect(rowsUpdated).toBe(1);
-
-    const updatedProfileFromDb = await database<Profile>('perfis')
-      .where({ id: profileId })
-      .first();
-    expect(updatedProfileFromDb?.nome).toBe(updatedProfile.nome);
-  });
-
-  it('should delete a profile', async () => {
-    const [profileId] = await profileModel.createProfile(testProfile);
-
-    const rowsDeleted = await profileModel.deleteProfile(profileId);
-    expect(rowsDeleted).toBe(1);
-
-    const deletedProfile = await database<Profile>('perfis')
-      .where({ id: profileId })
-      .first();
-    expect(deletedProfile).toBeUndefined();
-  });
+const createMockConnection = () => ({
+  select: jest.fn(),
+  insert: jest.fn(),
+  where: jest.fn().mockReturnThis(),
+  first: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
 });
 
-describe('Profile Model Unit Tests: Error Cases', () => {
-  it('should throw an error when creating a profile with invalid data', async () => {
-    const invalidProfile = {};
-    jest.spyOn(database, 'insert').mockResolvedValueOnce(invalidProfile);
+describe('Profile Model Unit Tests', () => {
+  let mockConnection: ReturnType<typeof createMockConnection>;
 
-    await expect(
-      profileModel.createProfile(invalidProfile as Profile),
-    ).rejects.toThrow('Could not create profile.');
+  beforeEach(() => {
+    mockConnection = createMockConnection();
+    (database as unknown as jest.Mock).mockReturnValue(mockConnection);
   });
 
-  it('should throw an error when there is an issue fetching all profiles', async () => {
-    jest
-      .spyOn(database, 'select')
-      .mockRejectedValueOnce(new Error('Database connection failed'));
+  describe('Success Cases', () => {
+    it('should fetch all profiles successfully', async () => {
+      const mockProfiles: Profile[] = [
+        { id: 1, nome: 'admin', descricao: 'Administrador' },
+        { id: 2, nome: 'comum', descricao: 'Comum' },
+      ];
 
-    await expect(profileModel.getAllProfiles()).rejects.toThrow(
-      'Could not fetch profiles.',
-    );
+      mockConnection.select.mockResolvedValueOnce(mockProfiles);
+
+      const profiles = await profileModel.getAllProfiles();
+
+      expect(profiles).toEqual(mockProfiles);
+      expect(mockConnection.select).toHaveBeenCalledWith('*');
+    });
+
+    it('should fetch a profile by parameters successfully', async () => {
+      const mockProfile = { id: 1, nome: 'admin', descricao: 'Administrador' };
+
+      mockConnection.first.mockResolvedValueOnce(mockProfile);
+
+      const params = { id: 1 };
+      const profile = await profileModel.getProfileByParams(params);
+
+      expect(profile).toEqual(mockProfile);
+      expect(mockConnection.where).toHaveBeenCalledWith(params);
+      expect(mockConnection.first).toHaveBeenCalled();
+    });
+
+    it('should create a new profile successfully', async () => {
+      const mockInsertResult = [1];
+      mockConnection.insert.mockResolvedValueOnce(mockInsertResult);
+
+      const newProfile = { nome: 'admin', descricao: 'Administrador' };
+      const result = await profileModel.createProfile(newProfile);
+
+      expect(result).toEqual(mockInsertResult);
+      expect(mockConnection.insert).toHaveBeenCalledWith(newProfile);
+    });
+
+    it('should update a profile successfully', async () => {
+      const mockUpdatedRows = 1;
+      mockConnection.update.mockResolvedValueOnce(mockUpdatedRows);
+
+      const id = 1;
+      const updatedProfile = { nome: 'Updated Admin' };
+      const result = await profileModel.updateProfile(id, updatedProfile);
+
+      expect(result).toBe(mockUpdatedRows);
+      expect(mockConnection.where).toHaveBeenCalledWith({ id });
+      expect(mockConnection.update).toHaveBeenCalledWith(updatedProfile);
+    });
+
+    it('should delete a profile successfully', async () => {
+      const mockDeletedRows = 1;
+      mockConnection.delete.mockResolvedValueOnce(mockDeletedRows);
+
+      const id = 1;
+      const result = await profileModel.deleteProfile(id);
+
+      expect(result).toBe(mockDeletedRows);
+      expect(mockConnection.where).toHaveBeenCalledWith({ id });
+      expect(mockConnection.delete).toHaveBeenCalled();
+    });
   });
 
-  it('should throw an error when fetching profiles by invalid params', async () => {
-    jest.spyOn(database, 'where').mockResolvedValueOnce([]);
+  describe('Error Cases', () => {
+    const testErrorHandling = async (
+      action: () => Promise<unknown>,
+      expectedError: string,
+      mockMethod: jest.Mock,
+    ) => {
+      mockMethod.mockRejectedValueOnce(new Error('Database error'));
+      await expect(action()).rejects.toThrow(expectedError);
+    };
 
-    await expect(profileModel.getProfileByParams({ id: -1 })).rejects.toThrow(
-      'Could not fetch profile by parameters.',
-    );
-  });
+    it('should throw an error when fetching all profiles fails', async () => {
+      await testErrorHandling(
+        () => profileModel.getAllProfiles(),
+        'Could not fetch profiles.',
+        mockConnection.select,
+      );
+    });
 
-  it('should throw an error when updating a non-existent profile', async () => {
-    jest.spyOn(database, 'where').mockResolvedValueOnce([]);
+    it('should throw an error when fetching a profile by parameters fails', async () => {
+      await testErrorHandling(
+        () => profileModel.getProfileByParams({ id: 1 }),
+        'Could not fetch profile by parameters.',
+        mockConnection.first,
+      );
+    });
 
-    await expect(
-      profileModel.updateProfile(9999, { nome: 'Nonexistent' }),
-    ).rejects.toThrow('Could not update profile with ID 9999.');
-  });
+    it('should throw an error when creating a profile fails', async () => {
+      await testErrorHandling(
+        () =>
+          profileModel.createProfile({
+            nome: 'admin',
+            descricao: 'Administrador',
+          }),
+        'Could not create profile.',
+        mockConnection.insert,
+      );
+    });
 
-  it('should throw an error when deleting a non-existent profile', async () => {
-    jest.spyOn(database, 'where').mockResolvedValueOnce([]);
+    it('should throw an error when updating a profile fails', async () => {
+      await testErrorHandling(
+        () => profileModel.updateProfile(1, { nome: 'Updated Admin' }),
+        'Could not update profile with ID 1.',
+        mockConnection.update,
+      );
+    });
 
-    await expect(profileModel.deleteProfile(9999)).rejects.toThrow(
-      'Could not delete profile with ID 9999.',
-    );
+    it('should throw an error when deleting a profile fails', async () => {
+      await testErrorHandling(
+        () => profileModel.deleteProfile(1),
+        'Could not delete profile with ID 1.',
+        mockConnection.delete,
+      );
+    });
   });
 });

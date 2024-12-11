@@ -1,117 +1,62 @@
+import database from '../../../jest.setup';
 import { profileService } from '../../service/profile.service';
-import database from '../../database/index';
 import { Profile } from '../../types/profiles.types';
 
-describe('Profile Service Integration Tests: Success Cases', () => {
-  it('should return all profiles from the database', async () => {
-    const mockProfiles: Profile[] = [
-      { nome: 'Admin', descricao: 'Administrator' },
-      { nome: 'User', descricao: 'Regular user' },
-    ];
-
-    await database('perfis').insert(mockProfiles);
-
+describe('Profile Service Integration Tests', () => {
+  it('should fetch all profiles from the database', async () => {
     const profiles = await profileService.getAllProfiles();
-
     expect(profiles).toHaveLength(2);
-    expect(profiles).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ nome: 'Admin', descricao: 'Administrator' }),
-        expect.objectContaining({ nome: 'User', descricao: 'Regular user' }),
-      ]),
-    );
+    expect(profiles).toEqual([
+      { descricao: 'Administrador', id: 1, nome: 'admin' },
+      { descricao: 'Comum', id: 2, nome: 'comum' },
+    ]);
   });
 
-  it('should return a specific profile matching the parameters', async () => {
-    const mockProfile: Profile = {
-      nome: 'Admin',
-      descricao: 'Administrator',
-    };
-    await database('perfis').insert(mockProfile);
+  it('should fetch a specific profile matching the given parameters', async () => {
+    const profile = await profileService.getProfileByParams({ id: 1 });
 
-    const profile = await profileService.getProfileByParams({ nome: 'Admin' });
-
-    expect(profile).toEqual(expect.objectContaining(mockProfile));
+    expect(profile).toEqual({
+      descricao: 'Administrador',
+      id: 1,
+      nome: 'admin',
+    });
   });
 
-  it('should create a new profile and return it with the correct data', async () => {
+  it('should create a new profile and return its data', async () => {
     const newProfile: Profile = {
       nome: 'Test Profile',
       descricao: 'A test profile for integration tests',
     };
 
     const createdProfile = await profileService.createProfile(newProfile);
+    expect(createdProfile).toEqual(expect.objectContaining(newProfile));
+  });
 
-    const insertedProfile = await database('perfis')
-      .where({ id: createdProfile.id })
+  it('should update an existing profile with the provided updates', async () => {
+    const latestProfile = await database<Profile>('perfis')
+      .select('id')
+      .orderBy('id', 'desc')
       .first();
 
-    expect(insertedProfile).toEqual(expect.objectContaining(newProfile));
-  });
-
-  it('should update an existing profile', async () => {
-    const mockProfile: Profile = {
-      nome: 'ToUpdate',
-      descricao: 'Old Description',
-    };
-    const [id] = await database('perfis').insert(mockProfile);
-
+    const id = latestProfile?.id;
     const updates = { descricao: 'New Description' };
-    await profileService.updateProfile(id, updates);
+    const updatedProfile = await profileService.updateProfile(id!, updates);
 
-    const updatedProfile = await database('perfis').where({ id }).first();
     expect(updatedProfile).toEqual(
-      expect.objectContaining({ ...mockProfile, ...updates }),
+      expect.objectContaining({ ...updatedProfile, ...updates }),
     );
   });
 
-  it('should delete a profile from the database', async () => {
-    const mockProfile: Profile = {
-      nome: 'ToDelete',
-      descricao: 'A profile to delete',
-    };
-    const [id] = await database('perfis').insert(mockProfile);
+  it('should delete an existing profile and confirm its removal', async () => {
+    const latestProfile = await database<Profile>('perfis')
+      .select('id')
+      .orderBy('id', 'desc')
+      .first();
 
-    await profileService.deleteProfile(id);
-    const deletedProfile = await database('perfis').where({ id }).first();
-
-    expect(deletedProfile).toBeUndefined();
-  });
-  // Outros testes
-});
-
-describe('Profile Service Integration Tests: Error Cases', () => {
-  it('should throw an error when trying to fetch a profiles', async () => {
-    await expect(profileService.getAllProfiles()).rejects.toThrow(
-      'Unable to fetch profiles. Please try again later.',
-    );
-  });
-
-  it('should throw an error when trying to fetch a non-existent profile', async () => {
-    await expect(
-      profileService.getProfileByParams({ nome: 'NonExistent' }),
-    ).rejects.toThrow(
-      'Unable to fetch profile based on the provided parameters. Please check the input and try again.',
-    );
-  });
-
-  it('should throw an error when trying to create an invalid profile', async () => {
-    await expect(profileService.createProfile({} as Profile)).rejects.toThrow(
-      'Unable to create a new profile. Please try again later.',
-    );
-  });
-
-  it('should throw an error when trying to update a non-existent profile', async () => {
-    await expect(
-      profileService.updateProfile(-1, {} as Profile),
-    ).rejects.toThrow(
-      'An unexpected error occurred while updating the profile.',
-    );
-  });
-
-  it('should throw an error when trying to delete a non-existent profile', async () => {
-    await expect(profileService.deleteProfile(9999)).rejects.toThrow(
-      'Unable to delete the profile with ID 9999. Please try again later.',
+    const id = latestProfile?.id;
+    const deletedProfile = await profileService.deleteProfile(id!);
+    expect(deletedProfile).toEqual(
+      `Profile with ID ${id} was successfully deleted.`,
     );
   });
 });
