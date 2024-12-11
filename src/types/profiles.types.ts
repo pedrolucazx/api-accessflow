@@ -5,19 +5,25 @@ export type Profile = {
 };
 
 export interface ProfileModel {
-  getAllProfiles(): Promise<Profile[]>;
-  getProfileByParams(params: Partial<Profile>): Promise<Profile>;
-  createProfile(profile: Profile): Promise<number[]>;
-  updateProfile(id: number, profile: Partial<Profile>): Promise<number>;
-  deleteProfile(id: number): Promise<number>;
+  getAllProfiles(): Promise<Profile[] | undefined>;
+  getProfileByParams(params: Partial<Profile>): Promise<Profile | undefined>;
+  createProfile(profile: Profile): Promise<number[] | undefined>;
+  updateProfile(
+    id: number,
+    profile: Partial<Profile>,
+  ): Promise<number | undefined>;
+  deleteProfile(id: number): Promise<number | undefined>;
 }
 
 export interface ProfileService {
-  getAllProfiles: () => Promise<Profile[]>;
-  getProfileByParams: (params: Partial<Profile>) => Promise<Profile>;
-  createProfile: (profile: Profile) => Promise<Profile>;
-  updateProfile: (id: number, profile: Partial<Profile>) => Promise<Profile>;
-  deleteProfile: (id: number) => Promise<string>;
+  getAllProfiles(): Promise<Profile[] | undefined>;
+  getProfileByParams(params: Partial<Profile>): Promise<Profile | undefined>;
+  createProfile(profile: Profile): Promise<Profile | undefined>;
+  updateProfile(
+    id: number,
+    profile: Partial<Profile>,
+  ): Promise<Profile | undefined>;
+  deleteProfile(id: number): Promise<string | undefined>;
 }
 
 export type argsType = {

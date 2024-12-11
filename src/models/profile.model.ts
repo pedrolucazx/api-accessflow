@@ -2,13 +2,9 @@ import database from '../database/index';
 import { Profile, ProfileModel } from '../types/profiles.types';
 
 export const profileModel: ProfileModel = {
-  getAllProfiles: async (): Promise<Profile[]> => {
+  getAllProfiles: async (): Promise<Profile[] | undefined> => {
     try {
       const profiles = await database<Profile>('perfis').select('*');
-      if (!profiles.length) {
-        throw new Error('No profiles found.');
-      }
-
       return profiles;
     } catch (error) {
       console.error('Error fetching profiles:', error);
@@ -16,12 +12,11 @@ export const profileModel: ProfileModel = {
     }
   },
 
-  getProfileByParams: async (params: Partial<Profile>): Promise<Profile> => {
+  getProfileByParams: async (
+    params: Partial<Profile>,
+  ): Promise<Profile | undefined> => {
     try {
       const profile = await database<Profile>('perfis').where(params).first();
-      if (!profile) {
-        throw new Error('Profile not found');
-      }
       return profile;
     } catch (error) {
       console.error('Error fetching profile by parameters:', error);
@@ -29,9 +24,10 @@ export const profileModel: ProfileModel = {
     }
   },
 
-  createProfile: async (profile: Profile): Promise<number[]> => {
+  createProfile: async (profile: Profile): Promise<number[] | undefined> => {
     try {
-      return await database<Profile>('perfis').insert(profile);
+      const id = await database<Profile>('perfis').insert(profile);
+      return id;
     } catch (error) {
       console.error('Error creating profile:', error);
       throw new Error('Could not create profile.');
@@ -41,14 +37,11 @@ export const profileModel: ProfileModel = {
   updateProfile: async (
     id: number,
     profile: Partial<Profile>,
-  ): Promise<number> => {
+  ): Promise<number | undefined> => {
     try {
       const updatedRows = await database<Profile>('perfis')
         .where({ id })
         .update(profile);
-      if (!updatedRows) {
-        throw new Error(`Profile with ID ${id} not found.`);
-      }
       return updatedRows;
     } catch (error) {
       console.error(`Error updating profile with ID ${id}:`, error);
@@ -56,14 +49,11 @@ export const profileModel: ProfileModel = {
     }
   },
 
-  deleteProfile: async (id: number): Promise<number> => {
+  deleteProfile: async (id: number): Promise<number | undefined> => {
     try {
       const deletedRows = await database<Profile>('perfis')
         .where({ id })
         .delete();
-      if (!deletedRows) {
-        throw new Error(`Profile with ID ${id} not found.`);
-      }
       return deletedRows;
     } catch (error) {
       console.error(`Error deleting profile with ID ${id}:`, error);
