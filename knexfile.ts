@@ -23,7 +23,7 @@ const config: { [key: string]: Knex.Config } = {
   },
   test: {
     client: 'sqlite3',
-    connection: { filename: ':memory:' },
+    connection: { filename: './src/database/test.db' },
     useNullAsDefault: true,
     migrations: {
       directory: './src/database/migrations',

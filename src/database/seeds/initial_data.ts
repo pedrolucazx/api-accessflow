@@ -6,8 +6,8 @@ export const seed = async (knex: Knex): Promise<void> => {
   await knex('perfis').del();
 
   await knex('perfis').insert([
-    { nome: 'admin', descricao: 'Administrador' },
-    { nome: 'comum', descricao: 'Comum' },
+    { id: 1, nome: 'admin', descricao: 'Administrador' },
+    { id: 2, nome: 'comum', descricao: 'Comum' },
   ]);
 
   await knex('usuarios').insert([

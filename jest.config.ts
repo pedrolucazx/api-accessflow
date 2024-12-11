@@ -6,16 +6,23 @@
 import type { Config } from 'jest';
 
 const config: Config = {
-  clearMocks: true,
-  testEnvironment: 'node',
+  maxWorkers: 1,
   preset: 'ts-jest',
-  roots: ['<rootDir>/src'],
+  testEnvironment: 'node',
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
-  coverageDirectory: '.coverage',
-  collectCoverageFrom: ['src/**/*.ts', '!src/tests/**'],
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
+  transform: {
+    '^.+\\.ts$': 'ts-jest',
+  },
+  collectCoverage: false,
+  collectCoverageFrom: ['src/**/*.ts', '!src/tests/**'],
+  coverageReporters: ['text', 'lcov'],
   transformIgnorePatterns: ['/node_modules/'],
+  moduleNameMapper: {
+    '^@database/(.*)$': '<rootDir>/src/database/$1',
+  },
+  coverageDirectory: '.coverage',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 };
 
 export default config;

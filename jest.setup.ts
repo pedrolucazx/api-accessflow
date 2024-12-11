@@ -14,22 +14,9 @@ beforeAll(async () => {
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });
 
-beforeEach(async () => {
-  const tables = await database.raw(
-    "SELECT name FROM sqlite_master WHERE type='table';",
-  );
-  for (const { name } of tables) {
-    if (name !== 'sqlite_sequence') {
-      await database(name).truncate();
-    }
-  }
-});
-
 afterAll(async () => {
   await database.destroy();
   jest.restoreAllMocks();
 });
-
-jest.mock('./src/database/index', () => database);
 
 export default database;
