@@ -37,13 +37,13 @@ export const profileService: ProfileService = {
         throw new Error('Profile data is incomplete or invalid.');
       }
 
-      const ids = await profileModel.createProfile(profile);
-      if (!ids || !ids.length) {
+      const id = await profileModel.createProfile(profile);
+      if (!id) {
         throw new Error('Failed to create profile.');
       }
 
       const createdProfile = await profileModel.getProfileByParams({
-        id: ids[0],
+        id,
       });
 
       return createdProfile!;

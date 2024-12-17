@@ -52,7 +52,7 @@ describe('Profile Service Unit Tests', () => {
       };
       const createdProfile = { id: 1, ...newProfile };
 
-      (profileModel.createProfile as jest.Mock).mockResolvedValue([1]);
+      (profileModel.createProfile as jest.Mock).mockResolvedValue(1);
       (profileModel.getProfileByParams as jest.Mock).mockResolvedValue(
         createdProfile,
       );
@@ -153,7 +153,7 @@ describe('Profile Service Unit Tests', () => {
     });
 
     it('should throw an error failure to create a profile', async () => {
-      (profileModel.createProfile as jest.Mock).mockResolvedValue([]);
+      (profileModel.createProfile as jest.Mock).mockResolvedValue(undefined);
       await mockErrorHandling(
         () =>
           profileService.createProfile({

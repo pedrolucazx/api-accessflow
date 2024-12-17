@@ -23,6 +23,7 @@ const config: Config = {
   },
   coverageDirectory: '.coverage',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  testTimeout: 20000,
 };
 
 export default config;

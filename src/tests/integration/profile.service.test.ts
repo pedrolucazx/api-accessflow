@@ -33,7 +33,7 @@ describe('Profile Service Integration Tests', () => {
   });
 
   it('should update an existing profile with the provided updates', async () => {
-    const latestProfile = await database<Profile>('perfis')
+    const latestProfile = await database!<Profile>('perfis')
       .select('id')
       .orderBy('id', 'desc')
       .first();
@@ -48,7 +48,7 @@ describe('Profile Service Integration Tests', () => {
   });
 
   it('should delete an existing profile and confirm its removal', async () => {
-    const latestProfile = await database<Profile>('perfis')
+    const latestProfile = await database!<Profile>('perfis')
       .select('id')
       .orderBy('id', 'desc')
       .first();

@@ -24,9 +24,9 @@ export const profileModel: ProfileModel = {
     }
   },
 
-  createProfile: async (profile: Profile): Promise<number[] | undefined> => {
+  createProfile: async (profile: Profile): Promise<number | undefined> => {
     try {
-      const id = await database<Profile>('perfis').insert(profile);
+      const [id] = await database<Profile>('perfis').insert(profile);
       return id;
     } catch (error) {
       console.error('Error creating profile:', error);
@@ -51,9 +51,7 @@ export const profileModel: ProfileModel = {
 
   deleteProfile: async (id: number): Promise<number | undefined> => {
     try {
-      const deletedRows = await database<Profile>('perfis')
-        .where({ id })
-        .delete();
+      const deletedRows = await database('perfis').where({ id }).delete();
       return deletedRows;
     } catch (error) {
       console.error(`Error deleting profile with ID ${id}:`, error);

@@ -4,28 +4,28 @@ import database from '../../../jest.setup';
 import { ApolloServer, BaseContext } from '@apollo/server';
 
 describe('Profile End-to-End Tests', () => {
-  const GET_ALL_PROFILES = `
-    query {
-      getAllProfiles {
-        id
-        nome
-        descricao
-      }
+  const GET_ALL_PROFILES = `#graphql
+  query {
+    getAllProfiles {
+      id
+      nome
+      descricao
     }
-  `;
+  }
+`;
 
-  const GET_PROFILE_BY_PARAMS = `
-    query($filter: ProfileFilterInput!) {
-      getProfileByParams(filter: $filter) {
-        id
-        nome
-        descricao
-      }
+  const GET_PROFILE_BY_PARAMS = `#graphql
+  query($filter: ProfileFilterInput!) {
+    getProfileByParams(filter: $filter) {
+      id
+      nome
+      descricao
     }
-  `;
+  }
+`;
 
-  const CREATE_PROFILE = `
-  mutation($input: ProfileInput!) {
+  const CREATE_PROFILE = `#graphql
+  mutation CreateProfile($input: ProfileInput!) {
     createProfile(input: $input) {
       id
       nome
@@ -34,7 +34,7 @@ describe('Profile End-to-End Tests', () => {
   }
 `;
 
-  const UPDATE_PROFILE = `
+  const UPDATE_PROFILE = `#graphql
   mutation($id: Int!, $input: ProfileUpdateInput!) {
     updateProfile(id: $id, input: $input) {
       id
@@ -44,25 +44,27 @@ describe('Profile End-to-End Tests', () => {
   }
 `;
 
-  const DELETE_PROFILE = `
+  const DELETE_PROFILE = `#graphql
   mutation($id: Int!) {
     deleteProfile(id: $id)
   }
 `;
 
-  let server: ApolloServer<BaseContext>, url: string;
+  let apolloServer: ApolloServer<BaseContext>;
+  let urlServer: string;
 
   beforeAll(async () => {
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
-    ({ server, url } = await startApolloServer(database, { port: 3333 }));
+    const { server, url } = await startApolloServer(database!, { port: 3333 });
+    apolloServer = server;
+    urlServer = url;
   });
 
   afterAll(async () => {
-    await server?.stop();
+    await apolloServer?.stop();
   });
 
   it('should fetch all profiles successfully', async () => {
-    const response = await request(url)
+    const response = await request(urlServer)
       .post('/')
       .send({ query: GET_ALL_PROFILES });
 
@@ -76,7 +78,7 @@ describe('Profile End-to-End Tests', () => {
   it('should fetch a profile by filter parameters', async () => {
     const filter = { id: 1 };
 
-    const response = await request(url)
+    const response = await request(urlServer)
       .post('/')
       .send({ query: GET_PROFILE_BY_PARAMS, variables: { filter } });
 
@@ -89,14 +91,12 @@ describe('Profile End-to-End Tests', () => {
   });
 
   it('should create a new profile successfully', async () => {
-    const newProfile = {
-      nome: 'gestor',
-      descricao: 'Gestor de equipe',
-    };
-
-    const response = await request(url)
+    const response = await request(urlServer)
       .post('/')
-      .send({ query: CREATE_PROFILE, variables: { input: newProfile } });
+      .send({
+        query: CREATE_PROFILE,
+        variables: { input: { nome: 'gestor', descricao: 'Gestor de equipe' } },
+      });
 
     expect(response.body.data.createProfile).toEqual({
       id: expect.any(Number),
@@ -112,7 +112,7 @@ describe('Profile End-to-End Tests', () => {
       descricao: 'Administrador com novas permissões',
     };
 
-    const response = await request(url)
+    const response = await request(urlServer)
       .post('/')
       .send({ query: UPDATE_PROFILE, variables: { id: 1, input: updateData } });
 
@@ -125,7 +125,7 @@ describe('Profile End-to-End Tests', () => {
   });
 
   it('should delete a profile successfully', async () => {
-    const response = await request(url)
+    const response = await request(urlServer)
       .post('/')
       .send({ query: DELETE_PROFILE, variables: { id: 2 } });
 

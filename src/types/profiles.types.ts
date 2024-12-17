@@ -7,7 +7,7 @@ export type Profile = {
 export interface ProfileModel {
   getAllProfiles(): Promise<Profile[] | undefined>;
   getProfileByParams(params: Partial<Profile>): Promise<Profile | undefined>;
-  createProfile(profile: Profile): Promise<number[] | undefined>;
+  createProfile(profile: Profile): Promise<number | undefined>;
   updateProfile(
     id: number,
     profile: Partial<Profile>,

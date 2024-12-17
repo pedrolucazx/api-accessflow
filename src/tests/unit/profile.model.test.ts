@@ -11,6 +11,7 @@ const createMockConnection = () => ({
   first: jest.fn(),
   update: jest.fn(),
   delete: jest.fn(),
+  returning: jest.fn(),
 });
 
 describe('Profile Model Unit Tests', () => {
@@ -52,12 +53,11 @@ describe('Profile Model Unit Tests', () => {
     it('should create a new profile successfully', async () => {
       const mockInsertResult = [1];
       mockConnection.insert.mockResolvedValueOnce(mockInsertResult);
-
       const newProfile = { nome: 'admin', descricao: 'Administrador' };
       const result = await profileModel.createProfile(newProfile);
 
-      expect(result).toEqual(mockInsertResult);
       expect(mockConnection.insert).toHaveBeenCalledWith(newProfile);
+      expect(result).toBe(1);
     });
 
     it('should update a profile successfully', async () => {
@@ -120,7 +120,7 @@ describe('Profile Model Unit Tests', () => {
             descricao: 'Administrador',
           }),
         'Could not create profile.',
-        mockConnection.insert,
+        mockConnection.returning,
       );
     });
 

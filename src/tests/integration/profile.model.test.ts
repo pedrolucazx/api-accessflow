@@ -32,11 +32,8 @@ describe('Profile Model Integration Tests', () => {
     const result = await profileModel.createProfile(profile);
 
     expect(result).toBeDefined();
-    expect(Array.isArray(result)).toBe(true);
-    expect(result?.length).toBeGreaterThan(0);
-
     const count = await database('perfis')
-      .where('id', result![0])
+      .where('id', result)
       .count('id as cnt')
       .first();
     expect(count?.cnt).toBe(1);
