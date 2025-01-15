@@ -13,18 +13,6 @@ const config: { [key: string]: Knex.Config } = {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
     },
-
-    migrations: {
-      directory: './src/database/migrations',
-    },
-    seeds: {
-      directory: './src/database/seeds',
-    },
-  },
-  test: {
-    client: 'sqlite3',
-    connection: { filename: './src/database/test.db' },
-    useNullAsDefault: true,
     migrations: {
       directory: './src/database/migrations',
     },
