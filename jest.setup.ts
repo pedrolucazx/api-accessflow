@@ -1,12 +1,15 @@
 import { Knex } from 'knex';
-import { databaseConnection, stopTestDatabase } from './src/database/index';
+import {
+  createDatabaseConnection,
+  stopTestDatabase,
+} from './src/database/index';
 import { config as dotenvConfig } from 'dotenv';
 
 dotenvConfig({ path: '.env.test' });
-let dbConnection: Knex;
+let dbConnection: Knex | null = null;
 
 beforeAll(async () => {
-  dbConnection = await databaseConnection;
+  dbConnection = await createDatabaseConnection();
   await dbConnection?.migrate.latest({
     directory: './src/database/migrations',
   });
@@ -16,10 +19,13 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await dbConnection?.migrate.rollback({
-    directory: './src/database/migrations',
-  });
-  await dbConnection?.destroy();
+  if (dbConnection) {
+    await dbConnection.migrate.rollback({
+      directory: './src/database/migrations',
+    });
+    await dbConnection.destroy();
+    dbConnection = null;
+  }
   await stopTestDatabase();
   jest.restoreAllMocks();
 });

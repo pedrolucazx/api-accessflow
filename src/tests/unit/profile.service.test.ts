@@ -3,6 +3,7 @@ import { profileService } from '../../service/profile.service';
 import { profileModel } from '../../models/profile.model';
 
 jest.setTimeout(50000);
+jest.mock('../../utils/executeQuery');
 jest.mock('../../models/profile.model');
 
 describe('Profile Service Unit Tests', () => {
@@ -167,6 +168,8 @@ describe('Profile Service Unit Tests', () => {
   });
 
   it('should throw an error invalid ID or data during update', async () => {
+    (profileModel.updateProfile as jest.Mock).mockResolvedValue(undefined);
+
     expect(await profileService.updateProfile(0, {})).toBeUndefined();
     expect(console.error).toHaveBeenCalledWith(
       'Error updating profile with ID 0:',

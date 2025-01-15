@@ -1,12 +1,12 @@
 import { Knex } from 'knex';
-import { databaseConnection } from '../database/index';
+import { createDatabaseConnection } from '../database/index';
 
 export async function executeQuery<T>(
   query: (database: Knex) => Promise<T>,
   errorMessage?: string,
 ): Promise<T> {
   try {
-    const database = await databaseConnection;
+    const database = await createDatabaseConnection();
     return await query(database);
   } catch (error) {
     console.error(errorMessage, error);
