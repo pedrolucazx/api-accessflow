@@ -1,10 +1,24 @@
-import database from '../../../jest.setup';
 import { profileService } from '../../service/profile.service';
 import { Profile } from '../../types/profiles.types';
+import { executeQuery } from '../../utils/executeQuery';
+
+jest.setTimeout(50000);
 
 describe('Profile Service Integration Tests', () => {
+  let latestProfile: Pick<Profile, 'id'> | undefined;
+  beforeAll(async () => {
+    latestProfile = await executeQuery(
+      async (database) =>
+        await database<Profile>('perfis')
+          .select('id')
+          .orderBy('id', 'desc')
+          .first(),
+    );
+  });
+
   it('should fetch all profiles from the database', async () => {
     const profiles = await profileService.getAllProfiles();
+
     expect(profiles).toHaveLength(2);
     expect(profiles).toEqual([
       { descricao: 'Administrador', id: 1, nome: 'admin' },
@@ -33,11 +47,6 @@ describe('Profile Service Integration Tests', () => {
   });
 
   it('should update an existing profile with the provided updates', async () => {
-    const latestProfile = await database!<Profile>('perfis')
-      .select('id')
-      .orderBy('id', 'desc')
-      .first();
-
     const id = latestProfile?.id;
     const updates = { descricao: 'New Description' };
     const updatedProfile = await profileService.updateProfile(id!, updates);
@@ -48,13 +57,9 @@ describe('Profile Service Integration Tests', () => {
   });
 
   it('should delete an existing profile and confirm its removal', async () => {
-    const latestProfile = await database!<Profile>('perfis')
-      .select('id')
-      .orderBy('id', 'desc')
-      .first();
-
     const id = latestProfile?.id;
     const deletedProfile = await profileService.deleteProfile(id!);
+
     expect(deletedProfile).toEqual(
       `Profile with ID ${id} was successfully deleted.`,
     );

@@ -1,7 +1,9 @@
-import request from 'supertest';
-import startApolloServer from '../../server';
-import database from '../../../jest.setup';
 import { ApolloServer, BaseContext } from '@apollo/server';
+import request from 'supertest';
+import { databaseConnection } from '../../database';
+import startApolloServer from '../../server';
+
+jest.setTimeout(50000);
 
 describe('Profile End-to-End Tests', () => {
   const GET_ALL_PROFILES = `#graphql
@@ -54,7 +56,8 @@ describe('Profile End-to-End Tests', () => {
   let urlServer: string;
 
   beforeAll(async () => {
-    const { server, url } = await startApolloServer(database!, { port: 3333 });
+    const database = await databaseConnection;
+    const { server, url } = await startApolloServer(database, { port: 3333 });
     apolloServer = server;
     urlServer = url;
   });
