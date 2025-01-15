@@ -38,15 +38,9 @@ export const profileService: ProfileService = {
       }
 
       const id = await profileModel.createProfile(profile);
-      if (!id) {
-        throw new Error('Failed to create profile.');
-      }
+      if (!id) throw new Error('Failed to create profile.');
 
-      const createdProfile = await profileModel.getProfileByParams({
-        id,
-      });
-
-      return createdProfile!;
+      return await profileModel.getProfileByParams({ id })!;
     } catch (error) {
       console.error('Error creating profile:', error);
     }
@@ -62,13 +56,12 @@ export const profileService: ProfileService = {
       }
 
       const updatedRows = await profileModel.updateProfile(id, profile);
+
       if (!updatedRows) {
         throw new Error(`No profile found with ID ${id} to update.`);
       }
 
-      const updatedProfile = await profileModel.getProfileByParams({ id });
-
-      return updatedProfile!;
+      return await profileModel.getProfileByParams({ id })!;
     } catch (error) {
       console.error(`Error updating profile with ID ${id}:`, error);
     }
