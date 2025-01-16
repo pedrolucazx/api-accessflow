@@ -55,4 +55,18 @@ describe('User Model Unit Tests', () => {
     expect(await userModel.getUserByParams({ id: 1 })).toEqual(mockUser);
     expect(executeQuery).toHaveBeenCalledTimes(1);
   });
+
+  it('should create a new user successfully', async () => {
+    mockedExecuteQuery.mockResolvedValueOnce(1);
+
+    expect(
+      await userModel.createUser({
+        nome: 'Novo Usuário',
+        email: 'novousuario@exemplo.com',
+        senha: 'Senha@321',
+        ativo: true,
+      }),
+    ).toBe(1);
+    expect(executeQuery).toHaveBeenCalledTimes(1);
+  });
 });
