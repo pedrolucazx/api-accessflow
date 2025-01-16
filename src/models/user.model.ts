@@ -16,4 +16,15 @@ export const userModel = {
       'Error fetching user by parameters.',
     );
   },
+
+  createUser: async (
+    user: Omit<User, 'id' | 'data_criacao' | 'data_update'>,
+  ): Promise<number | undefined> => {
+    return executeQuery(async (database) => {
+      const [{ id }] = await database<User>('usuarios')
+        .insert(user)
+        .returning('id');
+      return id;
+    }, 'Error creating user.');
+  },
 };
