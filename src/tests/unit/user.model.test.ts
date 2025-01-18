@@ -69,4 +69,18 @@ describe('User Model Unit Tests', () => {
     ).toBe(1);
     expect(executeQuery).toHaveBeenCalledTimes(1);
   });
+
+  it('should update a user successfully', async () => {
+    mockedExecuteQuery.mockResolvedValueOnce(1);
+
+    expect(await userModel.updateUser(1, { nome: 'Updated User' })).toBe(1);
+    expect(executeQuery).toHaveBeenCalledTimes(1);
+  });
+
+  it('should delete a user successfully', async () => {
+    mockedExecuteQuery.mockResolvedValueOnce(1);
+
+    expect(await userModel.deleteUser(1)).toBe(1);
+    expect(executeQuery).toHaveBeenCalledTimes(1);
+  });
 });
