@@ -83,4 +83,57 @@ describe('User Model Unit Tests', () => {
     expect(await userModel.deleteUser(1)).toBe(1);
     expect(executeQuery).toHaveBeenCalledTimes(1);
   });
+
+  it('should throw an error when fetching all users fails', async () => {
+    mockedExecuteQuery.mockRejectedValueOnce(
+      new Error('Error fetching users.'),
+    );
+
+    await expect(userModel.getAllUsers()).rejects.toThrow(
+      'Error fetching users.',
+    );
+  });
+
+  it('should throw an error when fetching a user by parameters fails', async () => {
+    mockedExecuteQuery.mockRejectedValueOnce(
+      new Error('Could not fetch user by parameters.'),
+    );
+    await expect(userModel.getUserByParams({ id: 1 })).rejects.toThrow(
+      'Could not fetch user by parameters.',
+    );
+  });
+
+  it('should throw an error when creating a user fails', async () => {
+    mockedExecuteQuery.mockRejectedValueOnce(
+      new Error('Could not create user.'),
+    );
+
+    await expect(
+      userModel.createUser({
+        nome: 'Novo Usuário',
+        email: 'novousuario@exemplo.com',
+        senha: 'Senha@321',
+        ativo: true,
+      }),
+    ).rejects.toThrow('Could not create user.');
+  });
+
+  it('should throw an error when updating a user fails', async () => {
+    mockedExecuteQuery.mockRejectedValueOnce(
+      new Error('Could not update user with ID 1.'),
+    );
+
+    await expect(
+      userModel.updateUser(1, { nome: 'Updated User' }),
+    ).rejects.toThrow('Could not update user with ID 1.');
+  });
+
+  it('should throw an error when deleting a user fails', async () => {
+    mockedExecuteQuery.mockRejectedValueOnce(
+      new Error('Could not delete user with ID 1.'),
+    );
+    await expect(userModel.deleteUser(1)).rejects.toThrow(
+      'Could not delete user with ID 1.',
+    );
+  });
 });
