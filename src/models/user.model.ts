@@ -27,4 +27,20 @@ export const userModel = {
       return id;
     }, 'Error creating user.');
   },
+
+  updateUser: async (id: number, user: Partial<User>): Promise<number> => {
+    return executeQuery(
+      async (database) =>
+        await database<User>('usuarios').where({ id }).update(user),
+      `Error updating user with ID ${id}.`,
+    );
+  },
+
+  deleteUser: async (id: number): Promise<number> => {
+    return executeQuery(
+      async (database) =>
+        await database<User>('usuarios').where({ id }).delete(),
+      `Error deleting user with ID ${id}.`,
+    );
+  },
 };
