@@ -6,10 +6,12 @@ export const userProfileModel = {
     profileId: number,
   ): Promise<number | undefined> => {
     return executeQuery(async (database) => {
-      const [id] = await database('usuarios_perfis').insert({
-        usuario_id: userId,
-        perfil_id: profileId,
-      });
+      const [{ id }] = await database('usuarios_perfis')
+        .insert({
+          usuario_id: userId,
+          perfil_id: profileId,
+        })
+        .returning('id');
       return id;
     }, 'Error when trying to associate a profile with a user.');
   },
