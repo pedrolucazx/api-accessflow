@@ -1,7 +1,7 @@
-import { User } from '../types/users.types';
+import { User, UserModel } from '../types/users.types';
 import { executeQuery } from '../utils/executeQuery';
 
-export const userModel = {
+export const userModel: UserModel = {
   getAllUsers: async (): Promise<User[]> => {
     return executeQuery(
       async (database) => await database<User>('usuarios').select('*'),

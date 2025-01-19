@@ -1,6 +1,7 @@
+import { UserProfileModel } from '../types/user_profile.types';
 import { executeQuery } from '../utils/executeQuery';
 
-export const userProfileModel = {
+export const userProfileModel: UserProfileModel = {
   associate: async (
     userId: number,
     profileId: number,
