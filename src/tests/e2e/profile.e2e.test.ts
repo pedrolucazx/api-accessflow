@@ -1,7 +1,7 @@
 import { ApolloServer, BaseContext } from '@apollo/server';
 import request from 'supertest';
-import { database } from '../../database';
-import startApolloServer from '../../server';
+import { database } from '@/database';
+import startApolloServer from '@/server';
 
 jest.setTimeout(50000);
 

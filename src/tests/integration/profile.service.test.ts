@@ -1,19 +1,14 @@
-import { profileService } from '../../service/profile.service';
-import { Profile } from '../../types/profiles.types';
-import { executeQuery } from '../../utils/executeQuery';
-
-jest.setTimeout(50000);
+import { database } from '@/database';
+import { profileService } from '@/service/profile.service';
+import { Profile } from '@/types/profiles.types';
 
 describe('Profile Service Integration Tests', () => {
   let latestProfile: Pick<Profile, 'id'> | undefined;
   beforeAll(async () => {
-    latestProfile = await executeQuery(
-      async (database) =>
-        await database<Profile>('perfis')
-          .select('id')
-          .orderBy('id', 'desc')
-          .first(),
-    );
+    latestProfile = await database<Profile>('perfis')
+      .select('id')
+      .orderBy('id', 'desc')
+      .first();
   });
 
   it('should fetch all profiles from the database', async () => {

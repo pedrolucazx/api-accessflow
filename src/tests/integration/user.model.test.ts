@@ -1,39 +1,30 @@
-import { userModel } from '../../models/user.model';
-import { User } from '../../types/users.types';
-import { executeQuery } from '../../utils/executeQuery';
-
-jest.setTimeout(50000);
+import { database } from '@/database';
+import { userModel } from '@/models/user.model';
+import { User } from '@/types/users.types';
 
 describe('User Model Integration Tests', () => {
   let latestUser: Pick<User, 'id'> | undefined;
   beforeAll(async () => {
-    latestUser = await executeQuery(
-      async (database) =>
-        await database<User>('usuarios')
-          .select('id')
-          .orderBy('id', 'desc')
-          .first(),
-    );
+    latestUser = await database<User>('usuarios')
+      .select('id')
+      .orderBy('id', 'desc')
+      .first();
   });
-  it('should return all users', async () => {
-    const fetchedProfiles = (await userModel.getAllUsers()).map((user) => ({
-      ...user,
-      data_criacao: new Date(user?.data_criacao as string).toISOString(),
-      data_update: new Date(user?.data_update as string).toISOString(),
-    }));
 
-    expect(fetchedProfiles).toHaveLength(2);
-    expect(fetchedProfiles).toEqual(
+  it('should return all users', async () => {
+    const users = await userModel.getAllUsers();
+    expect(users).toHaveLength(2);
+    expect(users).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          ativo: true,
+          ativo: 1,
           email: 'admin@exemplo.com',
           id: 1,
           nome: 'Admin Usuário',
           senha: 'senhaAdmin',
         }),
         expect.objectContaining({
-          ativo: true,
+          ativo: 1,
           email: 'usuario@exemplo.com',
           id: 2,
           nome: 'Usuário Comum',
@@ -48,7 +39,7 @@ describe('User Model Integration Tests', () => {
 
     expect(user).toEqual(
       expect.objectContaining({
-        ativo: true,
+        ativo: 1,
         email: 'admin@exemplo.com',
         id: 1,
         nome: 'Admin Usuário',

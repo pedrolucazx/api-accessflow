@@ -1,46 +1,43 @@
-import { userProfileModel } from '../../models/user_profile.model';
-import { executeQuery } from '../../utils/executeQuery';
+import { database } from '@/database';
+import { userProfileModel } from '@/models/user_profile.model';
 
-jest.setTimeout(50000);
-jest.mock('../../utils/executeQuery');
+jest.mock('@/database');
+
+const createMockConnection = () => ({
+  insert: jest.fn(),
+  where: jest.fn().mockReturnThis(),
+  delete: jest.fn(),
+});
 
 describe('User Profile Model Unit Tests', () => {
-  const mockedExecuteQuery = executeQuery as jest.Mock;
-  afterEach(() => {
-    jest.clearAllMocks();
+  let mockDatabase: ReturnType<typeof createMockConnection>;
+
+  beforeEach(() => {
+    mockDatabase = createMockConnection();
+    (database as unknown as jest.Mock).mockReturnValue(mockDatabase);
   });
 
   it('should associate the profile with the user successfully', async () => {
-    mockedExecuteQuery.mockResolvedValueOnce(1);
-
+    mockDatabase.insert.mockResolvedValueOnce([1]);
     expect(await userProfileModel.associate(1, 1)).toEqual(1);
-    expect(executeQuery).toHaveBeenCalledTimes(1);
   });
 
   it('should disassociate the profile with the user successfully', async () => {
-    mockedExecuteQuery.mockResolvedValueOnce(1);
-
-    expect(await userProfileModel.disassociate(1, 1)).toEqual(1);
-    expect(executeQuery).toHaveBeenCalledTimes(1);
+    mockDatabase.delete.mockResolvedValueOnce([1]);
+    expect(await userProfileModel.disassociate(1, 1)).toEqual([1]);
   });
 
   it('should throw an error when associate the profile with the user', async () => {
-    mockedExecuteQuery.mockRejectedValueOnce(
-      new Error('Error when trying to associate a profile with a user.'),
-    );
-
+    mockDatabase.insert.mockRejectedValueOnce(new Error('Database error'));
     await expect(userProfileModel.associate(1, 1)).rejects.toThrow(
-      'Error when trying to associate a profile with a user.',
+      'Database error',
     );
   });
 
   it('should throw an error when disassociate the profile with the user', async () => {
-    mockedExecuteQuery.mockRejectedValueOnce(
-      new Error('Error when trying to disassociate a profile with a user.'),
-    );
-
+    mockDatabase.delete.mockRejectedValueOnce(new Error('Database error'));
     await expect(userProfileModel.disassociate(1, 1)).rejects.toThrow(
-      'Error when trying to disassociate a profile with a user.',
+      'Database error',
     );
   });
 });

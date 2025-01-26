@@ -1,6 +1,4 @@
-import { userProfileModel } from '../../models/user_profile.model';
-
-jest.setTimeout(50000);
+import { userProfileModel } from '@/models/user_profile.model';
 
 describe('User Profile Model Integration Tests', () => {
   it('should associate the profile with the user successfully', async () => {

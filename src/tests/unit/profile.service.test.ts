@@ -1,10 +1,8 @@
-import { Profile } from '../../types/profiles.types';
-import { profileService } from '../../service/profile.service';
-import { profileModel } from '../../models/profile.model';
+import { Profile } from '@/types/profiles.types';
+import { profileService } from '@/service/profile.service';
+import { profileModel } from '@/models/profile.model';
 
-jest.setTimeout(50000);
-jest.mock('../../utils/executeQuery');
-jest.mock('../../models/profile.model');
+jest.mock('@/models/profile.model');
 
 describe('Profile Service Unit Tests', () => {
   const mockProfiles: Profile[] = [

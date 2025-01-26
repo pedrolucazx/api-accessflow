@@ -1,14 +1,24 @@
-import { userModel } from '../../models/user.model';
-import { User } from '../../types/users.types';
-import { executeQuery } from '../../utils/executeQuery';
+import { userModel } from '@/models/user.model';
+import { database } from '@/database';
+import { User } from '@/types/users.types';
 
-jest.setTimeout(50000);
-jest.mock('../../utils/executeQuery');
+jest.mock('@/database');
+
+const createMockConnection = () => ({
+  select: jest.fn(),
+  insert: jest.fn(),
+  where: jest.fn().mockReturnThis(),
+  first: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
+});
 
 describe('User Model Unit Tests', () => {
-  const mockedExecuteQuery = executeQuery as jest.Mock;
-  afterEach(() => {
-    jest.clearAllMocks();
+  let mockDatabase: ReturnType<typeof createMockConnection>;
+
+  beforeEach(() => {
+    mockDatabase = createMockConnection();
+    (database as unknown as jest.Mock).mockReturnValue(mockDatabase);
   });
 
   it('should fetch all users successfully', async () => {
@@ -19,7 +29,7 @@ describe('User Model Unit Tests', () => {
         email: 'admin@exemplo.com',
         ativo: true,
         data_criacao: '2025-01-16T02:54:02.311Z',
-        data_update: '2025-01-16T02:54:02.311',
+        data_update: '2025-01-16T02:54:02.311Z',
         senha: 'senhaAdmin',
       },
       {
@@ -28,15 +38,17 @@ describe('User Model Unit Tests', () => {
         email: 'usuario@exemplo.com',
         ativo: true,
         data_criacao: '2025-01-16T02:54:02.311Z',
-        data_update: '2025-01-16T02:54:02.311',
+        data_update: '2025-01-16T02:54:02.311Z',
         senha: 'senhaComum',
       },
     ];
 
-    mockedExecuteQuery.mockResolvedValueOnce(mockUsers);
+    mockDatabase.select.mockResolvedValueOnce(mockUsers);
 
-    expect(await userModel.getAllUsers()).toEqual(mockUsers);
-    expect(executeQuery).toHaveBeenCalledTimes(1);
+    const users = await userModel.getAllUsers();
+
+    expect(users).toEqual(mockUsers);
+    expect(mockDatabase.select).toHaveBeenCalledWith('*');
   });
 
   it('should fetch a user by parameters successfully', async () => {
@@ -46,67 +58,74 @@ describe('User Model Unit Tests', () => {
       email: 'admin@exemplo.com',
       ativo: true,
       data_criacao: '2025-01-16T02:54:02.311Z',
-      data_update: '2025-01-16T02:54:02.311',
+      data_update: '2025-01-16T02:54:02.311Z',
       senha: 'senhaAdmin',
     };
 
-    mockedExecuteQuery.mockResolvedValueOnce(mockUser);
+    mockDatabase.first.mockResolvedValueOnce(mockUser);
 
-    expect(await userModel.getUserByParams({ id: 1 })).toEqual(mockUser);
-    expect(executeQuery).toHaveBeenCalledTimes(1);
+    const params = { id: 1 };
+    const user = await userModel.getUserByParams(params);
+    expect(user).toEqual(mockUser);
+    expect(mockDatabase.where).toHaveBeenCalledWith(params);
+    expect(mockDatabase.first).toHaveBeenCalled();
   });
 
   it('should create a new user successfully', async () => {
-    mockedExecuteQuery.mockResolvedValueOnce(1);
+    const newUser = {
+      nome: 'Novo Usuário',
+      email: 'novousuario@exemplo.com',
+      senha: 'Senha@321',
+      ativo: true,
+    };
+    mockDatabase.insert.mockResolvedValueOnce([1]);
 
-    expect(
-      await userModel.createUser({
-        nome: 'Novo Usuário',
-        email: 'novousuario@exemplo.com',
-        senha: 'Senha@321',
-        ativo: true,
-      }),
-    ).toBe(1);
-    expect(executeQuery).toHaveBeenCalledTimes(1);
+    const result = await userModel.createUser(newUser);
+    expect(result).toEqual(1);
+    expect(mockDatabase.insert).toHaveBeenCalledWith(newUser);
   });
 
   it('should update a user successfully', async () => {
-    mockedExecuteQuery.mockResolvedValueOnce(1);
+    const mockUpdatedRows = 1;
+    mockDatabase.update.mockResolvedValueOnce(mockUpdatedRows);
 
-    expect(await userModel.updateUser(1, { nome: 'Updated User' })).toBe(1);
-    expect(executeQuery).toHaveBeenCalledTimes(1);
+    const id = 1;
+    const updatedUser = { nome: 'Updated User' };
+    const result = await userModel.updateUser(id, updatedUser);
+
+    expect(result).toBe(mockUpdatedRows);
+    expect(mockDatabase.where).toHaveBeenCalledWith({ id });
+    expect(mockDatabase.update).toHaveBeenCalledWith(updatedUser);
   });
 
   it('should delete a user successfully', async () => {
-    mockedExecuteQuery.mockResolvedValueOnce(1);
+    const mockDeletedRows = 1;
+    mockDatabase.delete.mockResolvedValueOnce(mockDeletedRows);
 
-    expect(await userModel.deleteUser(1)).toBe(1);
-    expect(executeQuery).toHaveBeenCalledTimes(1);
+    const id = 1;
+    const result = await userModel.deleteUser(id);
+
+    expect(result).toBe(mockDeletedRows);
+    expect(mockDatabase.where).toHaveBeenCalledWith({ id });
+    expect(mockDatabase.delete).toHaveBeenCalled();
   });
 
   it('should throw an error when fetching all users fails', async () => {
-    mockedExecuteQuery.mockRejectedValueOnce(
-      new Error('Error fetching users.'),
-    );
+    mockDatabase.select.mockRejectedValueOnce(new Error('Database error'));
 
-    await expect(userModel.getAllUsers()).rejects.toThrow(
-      'Error fetching users.',
-    );
+    await expect(userModel.getAllUsers()).rejects.toThrow('Database error');
   });
 
   it('should throw an error when fetching a user by parameters fails', async () => {
-    mockedExecuteQuery.mockRejectedValueOnce(
-      new Error('Could not fetch user by parameters.'),
-    );
+    mockDatabase.first.mockRejectedValueOnce(new Error('Database error'));
+
     await expect(userModel.getUserByParams({ id: 1 })).rejects.toThrow(
-      'Could not fetch user by parameters.',
+      'Database error',
     );
   });
 
   it('should throw an error when creating a user fails', async () => {
-    mockedExecuteQuery.mockRejectedValueOnce(
-      new Error('Could not create user.'),
-    );
+    mockDatabase.insert.mockRejectedValueOnce(new Error('Database error'));
 
     await expect(
       userModel.createUser({
@@ -115,25 +134,20 @@ describe('User Model Unit Tests', () => {
         senha: 'Senha@321',
         ativo: true,
       }),
-    ).rejects.toThrow('Could not create user.');
+    ).rejects.toThrow('Database error');
   });
 
   it('should throw an error when updating a user fails', async () => {
-    mockedExecuteQuery.mockRejectedValueOnce(
-      new Error('Could not update user with ID 1.'),
-    );
+    mockDatabase.update.mockRejectedValueOnce(new Error('Database error'));
 
     await expect(
       userModel.updateUser(1, { nome: 'Updated User' }),
-    ).rejects.toThrow('Could not update user with ID 1.');
+    ).rejects.toThrow('Database error');
   });
 
   it('should throw an error when deleting a user fails', async () => {
-    mockedExecuteQuery.mockRejectedValueOnce(
-      new Error('Could not delete user with ID 1.'),
-    );
-    await expect(userModel.deleteUser(1)).rejects.toThrow(
-      'Could not delete user with ID 1.',
-    );
+    mockDatabase.delete.mockRejectedValueOnce(new Error('Database error'));
+
+    await expect(userModel.deleteUser(1)).rejects.toThrow('Database error');
   });
 });

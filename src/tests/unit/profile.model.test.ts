@@ -1,8 +1,8 @@
-import { profileModel } from '../../models/profile.model';
-import { database } from '../../database/index';
-import { Profile } from '../../types/profiles.types';
+import { profileModel } from '@/models/profile.model';
+import { database } from '@/database';
+import { Profile } from '@/types/profiles.types';
 
-jest.mock('../../database/index');
+jest.mock('@/database');
 
 const createMockConnection = () => ({
   select: jest.fn(),
