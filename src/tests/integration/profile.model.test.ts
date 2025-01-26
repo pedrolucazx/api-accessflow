@@ -1,47 +1,39 @@
-import { profileModel } from '../../models/profile.model';
-import { Profile } from '../../types/profiles.types';
-import { executeQuery } from '../../utils/executeQuery';
-
-jest.setTimeout(50000);
+import { database } from '@/database';
+import { profileModel } from '@/models/profile.model';
+import type { Profile } from '@/types/profiles.types';
 
 describe('Profile Model Integration Tests', () => {
   let latestProfile: Pick<Profile, 'id'> | undefined;
   beforeAll(async () => {
-    latestProfile = await executeQuery(
-      async (database) =>
-        await database<Profile>('perfis')
-          .select('id')
-          .orderBy('id', 'desc')
-          .first(),
-    );
+    latestProfile = await database<Profile>('perfis')
+      .select('id')
+      .orderBy('id', 'desc')
+      .first();
   });
 
   it('should return all profiles', async () => {
-    const fetchedProfiles = await profileModel.getAllProfiles();
-    expect(fetchedProfiles).toHaveLength(2);
-    expect(fetchedProfiles).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          nome: 'admin',
-          descricao: 'Administrador',
-        }),
-        expect.objectContaining({ nome: 'comum', descricao: 'Comum' }),
-      ]),
-    );
+    const profiles = await profileModel.getAllProfiles();
+
+    expect(profiles).toEqual([
+      { id: 1, nome: 'admin', descricao: 'Administrador' },
+      { id: 2, nome: 'comum', descricao: 'Comum' },
+    ]);
   });
 
   it('should return a specific profile matching the parameters', async () => {
     const profile = await profileModel.getProfileByParams({ nome: 'admin' });
-
     expect(profile).toEqual(
       expect.objectContaining({ nome: 'admin', descricao: 'Administrador' }),
     );
   });
 
   it('should create a profile and return the inserted ID', async () => {
-    const profile = { nome: 'New Profile', descricao: 'New Profile' };
-    const result = await profileModel.createProfile(profile);
+    const result = await profileModel.createProfile({
+      nome: 'New Profile',
+      descricao: 'New Profile',
+    });
     expect(result).toBeDefined();
+    expect(result).toEqual(expect.any(Number));
   });
 
   it('should update a profile and return the number of affected rows', async () => {

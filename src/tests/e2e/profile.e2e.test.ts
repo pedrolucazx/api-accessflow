@@ -1,6 +1,6 @@
 import { ApolloServer, BaseContext } from '@apollo/server';
 import request from 'supertest';
-import { createDatabaseConnection } from '../../database';
+import { database } from '../../database';
 import startApolloServer from '../../server';
 
 jest.setTimeout(50000);
@@ -56,7 +56,6 @@ describe('Profile End-to-End Tests', () => {
   let urlServer: string;
 
   beforeAll(async () => {
-    const database = await createDatabaseConnection();
     const { server, url } = await startApolloServer(database, { port: 3333 });
     apolloServer = server;
     urlServer = url;
