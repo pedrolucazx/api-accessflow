@@ -1,4 +1,4 @@
 node_modules
 .env
 .coverage
-./src/database/test.db
+src/database/test.db

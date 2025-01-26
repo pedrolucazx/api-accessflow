@@ -19,7 +19,7 @@ const config: Config = {
   coverageReporters: ['text', 'lcov'],
   transformIgnorePatterns: ['/node_modules/'],
   moduleNameMapper: {
-    '^@database/(.*)$': '<rootDir>/src/database/$1',
+    '^@/(.*)$': '<rootDir>/src/$1',
   },
   coverageDirectory: '.coverage',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
