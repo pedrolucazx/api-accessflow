@@ -1,3 +1,4 @@
+import { handleError } from '@/utils/handleError';
 import { profileModel } from '../models/profile.model';
 import { Profile, ProfileService } from '../types/profiles.types';
 
@@ -10,7 +11,7 @@ export const profileService: ProfileService = {
       }
       return profiles;
     } catch (error) {
-      console.error('Error fetching profiles:', error);
+      handleError('Error fetching profiles:', error);
     }
   },
 
@@ -27,7 +28,7 @@ export const profileService: ProfileService = {
       }
       return profile;
     } catch (error) {
-      console.error('Error fetching profile by parameters:', error);
+      handleError('Error fetching profile by parameters:', error);
     }
   },
 
@@ -42,7 +43,7 @@ export const profileService: ProfileService = {
 
       return await profileModel.getProfileByParams({ id })!;
     } catch (error) {
-      console.error('Error creating profile:', error);
+      handleError('Error creating profile:', error);
     }
   },
 
@@ -63,7 +64,7 @@ export const profileService: ProfileService = {
 
       return await profileModel.getProfileByParams({ id })!;
     } catch (error) {
-      console.error(`Error updating profile with ID ${id}:`, error);
+      handleError(`Error updating profile with ID ${id}:`, error);
     }
   },
 
@@ -80,7 +81,7 @@ export const profileService: ProfileService = {
 
       return `Profile with ID ${id} was successfully deleted.`;
     } catch (error) {
-      console.error(`Error deleting profile with ID ${id}:`, error);
+      handleError(`Error deleting profile with ID ${id}:`, error);
     }
   },
 };
