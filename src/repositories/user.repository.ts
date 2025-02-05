@@ -1,7 +1,7 @@
 import { database } from '@/database';
-import type { User, UserModel } from '@/types/users.types';
+import type { User, UserRepository } from '@/types/users.types';
 
-export const userModel: UserModel = {
+export const userRepository: UserRepository = {
   getAllUsers: async (): Promise<User[]> => {
     try {
       return await database<User>('usuarios').select('*');

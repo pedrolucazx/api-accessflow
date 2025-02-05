@@ -1,5 +1,5 @@
 import { database } from '@/database';
-import { profileModel } from '@/models/profile.model';
+import { profileModel } from '@/repositories/profile.repository';
 import type { Profile } from '@/types/profiles.types';
 
 describe('Profile Model Integration Tests', () => {

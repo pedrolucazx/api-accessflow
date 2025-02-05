@@ -1,5 +1,5 @@
 import { database } from '@/database';
-import { userModel } from '@/models/user.model';
+import { userRepository } from '@/repositories/user.repository';
 import { User } from '@/types/users.types';
 
 describe('User Model Integration Tests', () => {
@@ -12,7 +12,7 @@ describe('User Model Integration Tests', () => {
   });
 
   it('should return all users', async () => {
-    const users = await userModel.getAllUsers();
+    const users = await userRepository.getAllUsers();
     expect(users).toHaveLength(2);
     expect(users).toEqual(
       expect.arrayContaining([
@@ -35,7 +35,7 @@ describe('User Model Integration Tests', () => {
   });
 
   it('should return a specific user matching the parameters', async () => {
-    const user = await userModel.getUserByParams({ id: 1 });
+    const user = await userRepository.getUserByParams({ id: 1 });
 
     expect(user).toEqual(
       expect.objectContaining({
@@ -55,20 +55,20 @@ describe('User Model Integration Tests', () => {
       nome: 'Novo Usuário',
       email: 'novousuario@exemplo.com',
     };
-    const result = await userModel.createUser(mockUser);
+    const result = await userRepository.createUser(mockUser);
     expect(result).toEqual(expect.any(Number));
   });
 
   it('should update a user and return the number of affected rows', async () => {
     const id = latestUser?.id;
     const updatedUser = { nome: 'Updated User' };
-    const updatedRows = await userModel.updateUser(id!, updatedUser);
+    const updatedRows = await userRepository.updateUser(id!, updatedUser);
     expect(updatedRows).toBe(1);
   });
 
   it('should delete a user and return the number of affected rows', async () => {
     const id = latestUser?.id;
-    const deleteRows = await userModel.deleteUser(id!);
+    const deleteRows = await userRepository.deleteUser(id!);
     expect(deleteRows).toBe(1);
   });
 });

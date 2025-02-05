@@ -1,8 +1,8 @@
 import { Profile } from '@/types/profiles.types';
 import { profileService } from '@/service/profile.service';
-import { profileModel } from '@/models/profile.model';
+import { profileModel } from '@/repositories/profile.repository';
 
-jest.mock('@/models/profile.model');
+jest.mock('@/repositories/profile.repository');
 
 describe('Profile Service Unit Tests', () => {
   const mockProfiles: Profile[] = [

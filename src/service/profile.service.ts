@@ -1,5 +1,5 @@
 import { handleError } from '@/utils/handleError';
-import { profileModel } from '../models/profile.model';
+import { profileModel } from '../repositories/profile.repository';
 import { Profile, ProfileService } from '../types/profiles.types';
 
 export const profileService: ProfileService = {

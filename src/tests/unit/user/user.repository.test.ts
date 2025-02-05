@@ -1,4 +1,4 @@
-import { userModel } from '@/models/user.model';
+import { userRepository } from '@/repositories/user.repository';
 import { database } from '@/database';
 import { User } from '@/types/users.types';
 
@@ -45,7 +45,7 @@ describe('User Model Unit Tests', () => {
 
     mockDatabase.select.mockResolvedValueOnce(mockUsers);
 
-    const users = await userModel.getAllUsers();
+    const users = await userRepository.getAllUsers();
 
     expect(users).toEqual(mockUsers);
     expect(mockDatabase.select).toHaveBeenCalledWith('*');
@@ -65,7 +65,7 @@ describe('User Model Unit Tests', () => {
     mockDatabase.first.mockResolvedValueOnce(mockUser);
 
     const params = { id: 1 };
-    const user = await userModel.getUserByParams(params);
+    const user = await userRepository.getUserByParams(params);
     expect(user).toEqual(mockUser);
     expect(mockDatabase.where).toHaveBeenCalledWith(params);
     expect(mockDatabase.first).toHaveBeenCalled();
@@ -80,7 +80,7 @@ describe('User Model Unit Tests', () => {
     };
     mockDatabase.insert.mockResolvedValueOnce([1]);
 
-    const result = await userModel.createUser(newUser);
+    const result = await userRepository.createUser(newUser);
     expect(result).toEqual(1);
     expect(mockDatabase.insert).toHaveBeenCalledWith(newUser);
   });
@@ -91,7 +91,7 @@ describe('User Model Unit Tests', () => {
 
     const id = 1;
     const updatedUser = { nome: 'Updated User' };
-    const result = await userModel.updateUser(id, updatedUser);
+    const result = await userRepository.updateUser(id, updatedUser);
 
     expect(result).toBe(mockUpdatedRows);
     expect(mockDatabase.where).toHaveBeenCalledWith({ id });
@@ -103,7 +103,7 @@ describe('User Model Unit Tests', () => {
     mockDatabase.delete.mockResolvedValueOnce(mockDeletedRows);
 
     const id = 1;
-    const result = await userModel.deleteUser(id);
+    const result = await userRepository.deleteUser(id);
 
     expect(result).toBe(mockDeletedRows);
     expect(mockDatabase.where).toHaveBeenCalledWith({ id });
@@ -113,13 +113,15 @@ describe('User Model Unit Tests', () => {
   it('should throw an error when fetching all users fails', async () => {
     mockDatabase.select.mockRejectedValueOnce(new Error('Database error'));
 
-    await expect(userModel.getAllUsers()).rejects.toThrow('Database error');
+    await expect(userRepository.getAllUsers()).rejects.toThrow(
+      'Database error',
+    );
   });
 
   it('should throw an error when fetching a user by parameters fails', async () => {
     mockDatabase.first.mockRejectedValueOnce(new Error('Database error'));
 
-    await expect(userModel.getUserByParams({ id: 1 })).rejects.toThrow(
+    await expect(userRepository.getUserByParams({ id: 1 })).rejects.toThrow(
       'Database error',
     );
   });
@@ -128,7 +130,7 @@ describe('User Model Unit Tests', () => {
     mockDatabase.insert.mockRejectedValueOnce(new Error('Database error'));
 
     await expect(
-      userModel.createUser({
+      userRepository.createUser({
         nome: 'Novo Usuário',
         email: 'novousuario@exemplo.com',
         senha: 'Senha@321',
@@ -141,13 +143,15 @@ describe('User Model Unit Tests', () => {
     mockDatabase.update.mockRejectedValueOnce(new Error('Database error'));
 
     await expect(
-      userModel.updateUser(1, { nome: 'Updated User' }),
+      userRepository.updateUser(1, { nome: 'Updated User' }),
     ).rejects.toThrow('Database error');
   });
 
   it('should throw an error when deleting a user fails', async () => {
     mockDatabase.delete.mockRejectedValueOnce(new Error('Database error'));
 
-    await expect(userModel.deleteUser(1)).rejects.toThrow('Database error');
+    await expect(userRepository.deleteUser(1)).rejects.toThrow(
+      'Database error',
+    );
   });
 });

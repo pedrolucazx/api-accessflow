@@ -1,10 +1,10 @@
-import { userModel } from '../models/user.model';
+import { userRepository } from '../repositories/user.repository';
 import { User } from '../types/users.types';
 
 export const userService = {
   getAllUsers: async (): Promise<Omit<User, 'senha'>[] | undefined> => {
     try {
-      const users = await userModel.getAllUsers();
+      const users = await userRepository.getAllUsers();
       if (!users?.length) throw new Error('No users found');
       return users?.map(({ senha, ...user }) => user);
     } catch (error) {

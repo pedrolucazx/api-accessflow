@@ -8,7 +8,7 @@ export type User = {
   data_update?: string;
 };
 
-export interface UserModel {
+export interface UserRepository {
   getAllUsers: () => Promise<User[]>;
   getUserByParams: (params: Partial<User>) => Promise<User | undefined>;
   createUser: (

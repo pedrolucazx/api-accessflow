@@ -1,5 +1,5 @@
 import { database } from '@/database';
-import { userProfileModel } from '@/models/user_profile.model';
+import { userProfileModel } from '@/repositories/user_profile.repository';
 
 jest.mock('@/database');
 

@@ -1,4 +1,4 @@
-import { userProfileModel } from '@/models/user_profile.model';
+import { userProfileModel } from '@/repositories/user_profile.repository';
 
 describe('User Profile Model Integration Tests', () => {
   it('should associate the profile with the user successfully', async () => {

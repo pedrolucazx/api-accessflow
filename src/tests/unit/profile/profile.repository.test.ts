@@ -1,4 +1,4 @@
-import { profileModel } from '@/models/profile.model';
+import { profileModel } from '@/repositories/profile.repository';
 import { database } from '@/database';
 import { Profile } from '@/types/profiles.types';
 
