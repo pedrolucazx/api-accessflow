@@ -1,7 +1,12 @@
-import { database } from '@/database';
-import type { Profile, ProfileModel } from '@/types/profiles.types';
+import { database } from '../database';
+import type {
+  Profile,
+  ProfileFilter,
+  ProfileInput,
+  ProfileRepository,
+} from '../types/profiles.types';
 
-export const profileModel: ProfileModel = {
+export const profileRepository: ProfileRepository = {
   getAllProfiles: async (): Promise<Profile[]> => {
     try {
       return await database<Profile>('perfis').select('*');
@@ -12,10 +17,10 @@ export const profileModel: ProfileModel = {
   },
 
   getProfileByParams: async (
-    params: Partial<Profile>,
+    filters: ProfileFilter,
   ): Promise<Profile | undefined> => {
     try {
-      return await database<Profile>('perfis').where(params).first();
+      return await database<Profile>('perfis').where(filters).first();
     } catch (error) {
       console.error(error);
       throw error;
@@ -23,11 +28,14 @@ export const profileModel: ProfileModel = {
   },
 
   createProfile: async (
-    profile: Omit<Profile, 'id'>,
-  ): Promise<number | undefined> => {
+    profile: ProfileInput,
+  ): Promise<Profile | undefined> => {
     try {
-      const [id] = await database<Profile>('perfis').insert(profile);
-      return id;
+      const [createdProfile] = await database<Profile>('perfis')
+        .insert(profile)
+        .returning('*');
+
+      return createdProfile;
     } catch (error) {
       console.error(error);
       throw error;
@@ -36,10 +44,15 @@ export const profileModel: ProfileModel = {
 
   updateProfile: async (
     id: number,
-    profile: Partial<Profile>,
-  ): Promise<number> => {
+    profile: Partial<ProfileInput>,
+  ): Promise<Profile | undefined> => {
     try {
-      return await database<Profile>('perfis').where({ id }).update(profile);
+      const [updatedProfile] = await database<Profile>('perfis')
+        .where({ id })
+        .update(profile)
+        .returning('*');
+
+      return updatedProfile;
     } catch (error) {
       console.error(error);
       throw error;

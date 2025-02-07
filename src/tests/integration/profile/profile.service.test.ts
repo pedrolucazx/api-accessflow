@@ -1,6 +1,6 @@
 import { database } from '@/database';
 import { profileService } from '@/service/profile.service';
-import { Profile } from '@/types/profiles.types';
+import { Profile, ProfileInput } from '@/types/profiles.types';
 
 describe('Profile Service Integration Tests', () => {
   let latestProfile: Pick<Profile, 'id'> | undefined;
@@ -32,7 +32,7 @@ describe('Profile Service Integration Tests', () => {
   });
 
   it('should create a new profile and return its data', async () => {
-    const newProfile: Profile = {
+    const newProfile: ProfileInput = {
       nome: 'Test Profile',
       descricao: 'A test profile for integration tests',
     };

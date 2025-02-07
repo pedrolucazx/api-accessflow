@@ -1,6 +1,6 @@
-import { Profile } from '@/types/profiles.types';
+import { Profile, ProfileInput } from '@/types/profiles.types';
 import { profileService } from '@/service/profile.service';
-import { profileModel } from '@/repositories/profile.repository';
+import { profileRepository } from '@/repositories/profile.repository';
 
 jest.mock('@/repositories/profile.repository');
 
@@ -15,73 +15,78 @@ describe('Profile Service Unit Tests', () => {
   });
 
   it('should fetch all profiles successfully', async () => {
-    (profileModel.getAllProfiles as jest.Mock).mockResolvedValue(mockProfiles);
+    (profileRepository.getAllProfiles as jest.Mock).mockResolvedValue(
+      mockProfiles,
+    );
     const profiles = await profileService.getAllProfiles();
 
     expect(profiles).toEqual(mockProfiles);
-    expect(profileModel.getAllProfiles).toHaveBeenCalledTimes(1);
+    expect(profileRepository.getAllProfiles).toHaveBeenCalledTimes(1);
   });
 
   it('should fetch a profile by valid parameters successfully', async () => {
     const expectedProfile = mockProfiles[0];
-    (profileModel.getProfileByParams as jest.Mock).mockResolvedValue(
+    (profileRepository.getProfileByParams as jest.Mock).mockResolvedValue(
       expectedProfile,
     );
     const profile = await profileService.getProfileByParams({ id: 1 });
 
     expect(profile).toEqual(expectedProfile);
-    expect(profileModel.getProfileByParams).toHaveBeenCalledWith({ id: 1 });
+    expect(profileRepository.getProfileByParams).toHaveBeenCalledWith({
+      id: 1,
+    });
   });
 
   it('should create a profile successfully', async () => {
-    const newProfile: Profile = {
+    const newProfile: ProfileInput = {
       nome: 'New Profile',
       descricao: 'New Profile',
     };
     const createdProfile = { id: 1, ...newProfile };
 
-    (profileModel.createProfile as jest.Mock).mockResolvedValue(1);
-    (profileModel.getProfileByParams as jest.Mock).mockResolvedValue(
+    (profileRepository.createProfile as jest.Mock).mockResolvedValue(
       createdProfile,
     );
 
     const result = await profileService.createProfile(newProfile);
     expect(result).toEqual(createdProfile);
-    expect(profileModel.createProfile).toHaveBeenCalledWith(newProfile);
-    expect(profileModel.getProfileByParams).toHaveBeenCalledWith({ id: 1 });
+    expect(profileRepository.createProfile).toHaveBeenCalledWith(newProfile);
   });
 
   it('should update a profile successfully', async () => {
-    const updatedData = { nome: 'Updated admin' };
+    const updatedData = {
+      nome: 'Updated admin',
+      descricao: 'Updated Administrador',
+    };
     const updatedProfile = {
       id: 1,
-      nome: 'Updated admin',
-      descricao: 'Administrador',
+      ...updatedData,
     };
 
-    (profileModel.updateProfile as jest.Mock).mockResolvedValue(1);
-    (profileModel.getProfileByParams as jest.Mock).mockResolvedValue(
+    (profileRepository.updateProfile as jest.Mock).mockResolvedValue(
       updatedProfile,
     );
 
     const result = await profileService.updateProfile(1, updatedData);
     expect(result).toEqual(updatedProfile);
-    expect(profileModel.updateProfile).toHaveBeenCalledWith(1, updatedData);
-    expect(profileModel.getProfileByParams).toHaveBeenCalledWith({ id: 1 });
+    expect(profileRepository.updateProfile).toHaveBeenCalledWith(
+      1,
+      updatedData,
+    );
   });
 
   it('should delete a profile successfully', async () => {
     const profileId = 1;
-    (profileModel.deleteProfile as jest.Mock).mockResolvedValue(1);
+    (profileRepository.deleteProfile as jest.Mock).mockResolvedValue(1);
     const result = await profileService.deleteProfile(profileId);
     expect(result).toBe(
       `Profile with ID ${profileId} was successfully deleted.`,
     );
-    expect(profileModel.deleteProfile).toHaveBeenCalledWith(profileId);
+    expect(profileRepository.deleteProfile).toHaveBeenCalledWith(profileId);
   });
 
   it('should throw an error no profiles found during fetch', async () => {
-    (profileModel.getAllProfiles as jest.Mock).mockResolvedValue([]);
+    (profileRepository.getAllProfiles as jest.Mock).mockResolvedValue([]);
 
     await expect(profileService.getAllProfiles()).rejects.toThrow(
       'No profiles found.',
@@ -89,7 +94,7 @@ describe('Profile Service Unit Tests', () => {
   });
 
   it('should throw an error database during fetch of all profiles', async () => {
-    (profileModel.getAllProfiles as jest.Mock).mockRejectedValue(
+    (profileRepository.getAllProfiles as jest.Mock).mockRejectedValue(
       new Error('Database error'),
     );
 
@@ -105,7 +110,9 @@ describe('Profile Service Unit Tests', () => {
   });
 
   it('should throw an error profile not found for given parameters', async () => {
-    (profileModel.getProfileByParams as jest.Mock).mockResolvedValue(undefined);
+    (profileRepository.getProfileByParams as jest.Mock).mockResolvedValue(
+      undefined,
+    );
 
     await expect(
       profileService.getProfileByParams({ nome: 'Non-existent' }),
@@ -113,7 +120,7 @@ describe('Profile Service Unit Tests', () => {
   });
 
   it('should throw an error database during fetch by parameters', async () => {
-    (profileModel.getProfileByParams as jest.Mock).mockRejectedValue(
+    (profileRepository.getProfileByParams as jest.Mock).mockRejectedValue(
       new Error('Database error'),
     );
 
@@ -129,7 +136,7 @@ describe('Profile Service Unit Tests', () => {
   });
 
   it('should throw an error failure to create a profile', async () => {
-    (profileModel.createProfile as jest.Mock).mockResolvedValue(undefined);
+    (profileRepository.createProfile as jest.Mock).mockResolvedValue(undefined);
 
     await expect(
       profileService.createProfile({
@@ -140,7 +147,7 @@ describe('Profile Service Unit Tests', () => {
   });
 
   it('should throw an error database during profile create', async () => {
-    (profileModel.createProfile as jest.Mock).mockRejectedValue(
+    (profileRepository.createProfile as jest.Mock).mockRejectedValue(
       new Error('Database error'),
     );
 
@@ -159,7 +166,7 @@ describe('Profile Service Unit Tests', () => {
   });
 
   it('should throw an error profile not found for update', async () => {
-    (profileModel.updateProfile as jest.Mock).mockResolvedValue(0);
+    (profileRepository.updateProfile as jest.Mock).mockResolvedValue(0);
 
     await expect(
       profileService.updateProfile(1, { nome: 'Update' }),
@@ -167,7 +174,7 @@ describe('Profile Service Unit Tests', () => {
   });
 
   it('should throw an error database during profile update', async () => {
-    (profileModel.updateProfile as jest.Mock).mockRejectedValue(
+    (profileRepository.updateProfile as jest.Mock).mockRejectedValue(
       new Error('Database error'),
     );
 
@@ -183,7 +190,7 @@ describe('Profile Service Unit Tests', () => {
   });
 
   it('should throw an error database during profile deletion', async () => {
-    (profileModel.deleteProfile as jest.Mock).mockRejectedValue(
+    (profileRepository.deleteProfile as jest.Mock).mockRejectedValue(
       new Error('Database error'),
     );
 
@@ -193,7 +200,7 @@ describe('Profile Service Unit Tests', () => {
   });
 
   it('should throw an error profile not found for deletion', async () => {
-    (profileModel.deleteProfile as jest.Mock).mockResolvedValue(undefined);
+    (profileRepository.deleteProfile as jest.Mock).mockResolvedValue(undefined);
 
     await expect(profileService.deleteProfile(1)).rejects.toThrow(
       'No profile found with ID 1 to delete.',

@@ -1,24 +1,35 @@
 export type Profile = {
-  id?: number;
+  id: number;
   nome: string;
   descricao?: string;
 };
 
-export interface ProfileModel {
+export type ProfileFilter = {
+  id?: number;
+  nome?: string;
+  descricao?: string;
+};
+
+export type ProfileInput = {
+  nome: string;
+  descricao?: string;
+};
+
+export interface ProfileRepository {
   getAllProfiles(): Promise<Profile[] | undefined>;
-  getProfileByParams(params: Partial<Profile>): Promise<Profile | undefined>;
-  createProfile(profile: Omit<Profile, 'id'>): Promise<number | undefined>;
+  getProfileByParams(filters: ProfileFilter): Promise<Profile | undefined>;
+  createProfile(profile: ProfileInput): Promise<Profile | undefined>;
   updateProfile(
     id: number,
     profile: Partial<Profile>,
-  ): Promise<number | undefined>;
+  ): Promise<Profile | undefined>;
   deleteProfile(id: number): Promise<number | undefined>;
 }
 
 export interface ProfileService {
   getAllProfiles(): Promise<Profile[] | undefined>;
-  getProfileByParams(params: Partial<Profile>): Promise<Profile | undefined>;
-  createProfile(profile: Profile): Promise<Profile | undefined>;
+  getProfileByParams(filters: ProfileFilter): Promise<Profile | undefined>;
+  createProfile(profile: ProfileInput): Promise<Profile | undefined>;
   updateProfile(
     id: number,
     profile: Partial<Profile>,
@@ -28,6 +39,6 @@ export interface ProfileService {
 
 export type argsType = {
   id: number;
-  input: Profile;
-  filter: Partial<Profile>;
+  input: ProfileInput;
+  filter: ProfileFilter;
 };

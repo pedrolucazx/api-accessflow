@@ -1,11 +1,16 @@
-import { handleError } from '@/utils/handleError';
-import { profileModel } from '../repositories/profile.repository';
-import { Profile, ProfileService } from '../types/profiles.types';
+import { handleError } from '../../src/utils/handleError';
+import { profileRepository } from '../repositories/profile.repository';
+import {
+  Profile,
+  ProfileFilter,
+  ProfileInput,
+  ProfileService,
+} from '../types/profiles.types';
 
 export const profileService: ProfileService = {
   getAllProfiles: async (): Promise<Profile[] | undefined> => {
     try {
-      const profiles = await profileModel.getAllProfiles();
+      const profiles = await profileRepository.getAllProfiles();
       if (!profiles?.length) {
         throw new Error('No profiles found.');
       }
@@ -16,13 +21,13 @@ export const profileService: ProfileService = {
   },
 
   getProfileByParams: async (
-    params: Partial<Profile>,
+    filters: ProfileFilter,
   ): Promise<Profile | undefined> => {
     try {
-      if (!Object.keys(params).length) {
+      if (!Object.keys(filters).length) {
         throw new Error('At least one parameter must be provided.');
       }
-      const profile = await profileModel.getProfileByParams(params);
+      const profile = await profileRepository.getProfileByParams(filters);
       if (!profile) {
         throw new Error('Profile not found.');
       }
@@ -32,16 +37,18 @@ export const profileService: ProfileService = {
     }
   },
 
-  createProfile: async (profile: Profile): Promise<Profile | undefined> => {
+  createProfile: async (
+    profile: ProfileInput,
+  ): Promise<Profile | undefined> => {
     try {
       if (!profile || !profile.nome) {
         throw new Error('Profile data is incomplete or invalid.');
       }
 
-      const id = await profileModel.createProfile(profile);
-      if (!id) throw new Error('Failed to create profile.');
+      const createdProfile = await profileRepository.createProfile(profile);
+      if (!createdProfile) throw new Error('Failed to create profile.');
 
-      return await profileModel.getProfileByParams({ id })!;
+      return createdProfile;
     } catch (error) {
       handleError('Error creating profile:', error);
     }
@@ -49,20 +56,19 @@ export const profileService: ProfileService = {
 
   updateProfile: async (
     id: number,
-    profile: Partial<Profile>,
+    profile: Partial<ProfileInput>,
   ): Promise<Profile | undefined> => {
     try {
       if (!id || !profile || !Object.keys(profile).length) {
         throw new Error('Invalid profile data or ID.');
       }
 
-      const updatedRows = await profileModel.updateProfile(id, profile);
-
-      if (!updatedRows) {
+      const updatedProfile = await profileRepository.updateProfile(id, profile);
+      if (!updatedProfile) {
         throw new Error(`No profile found with ID ${id} to update.`);
       }
 
-      return await profileModel.getProfileByParams({ id })!;
+      return updatedProfile;
     } catch (error) {
       handleError(`Error updating profile with ID ${id}:`, error);
     }
@@ -74,7 +80,7 @@ export const profileService: ProfileService = {
         throw new Error('Profile ID is required.');
       }
 
-      const deletedRows = await profileModel.deleteProfile(id);
+      const deletedRows = await profileRepository.deleteProfile(id);
       if (!deletedRows) {
         throw new Error(`No profile found with ID ${id} to delete.`);
       }

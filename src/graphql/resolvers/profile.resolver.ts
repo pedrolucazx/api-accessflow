@@ -1,5 +1,5 @@
-import { profileService } from '@/service/profile.service';
-import { Profile, argsType } from '@/types/profiles.types';
+import { profileService } from '../../service/profile.service';
+import { Profile, argsType } from '../../types/profiles.types';
 
 const resolvers = {
   Query: {

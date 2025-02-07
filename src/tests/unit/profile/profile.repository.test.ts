@@ -1,4 +1,4 @@
-import { profileModel } from '@/repositories/profile.repository';
+import { profileRepository } from '@/repositories/profile.repository';
 import { database } from '@/database';
 import { Profile } from '@/types/profiles.types';
 
@@ -6,10 +6,10 @@ jest.mock('@/database');
 
 const createMockConnection = () => ({
   select: jest.fn(),
-  insert: jest.fn(),
+  insert: jest.fn().mockReturnValue({ returning: jest.fn() }),
   where: jest.fn().mockReturnThis(),
   first: jest.fn(),
-  update: jest.fn(),
+  update: jest.fn().mockReturnValue({ returning: jest.fn() }),
   delete: jest.fn(),
 });
 
@@ -30,7 +30,7 @@ describe('Profile Model Unit Tests', () => {
 
       mockDatabase.select.mockResolvedValueOnce(mockProfiles);
 
-      const profiles = await profileModel.getAllProfiles();
+      const profiles = await profileRepository.getAllProfiles();
 
       expect(profiles).toEqual(mockProfiles);
       expect(mockDatabase.select).toHaveBeenCalledWith('*');
@@ -39,7 +39,7 @@ describe('Profile Model Unit Tests', () => {
     it('should throw an error when fetching all profiles fails', async () => {
       mockDatabase.select.mockRejectedValueOnce(new Error('Database error'));
 
-      await expect(profileModel.getAllProfiles()).rejects.toThrow(
+      await expect(profileRepository.getAllProfiles()).rejects.toThrow(
         'Database error',
       );
     });
@@ -49,7 +49,7 @@ describe('Profile Model Unit Tests', () => {
       mockDatabase.first.mockResolvedValueOnce(mockProfile);
 
       const params = { id: 1 };
-      const profile = await profileModel.getProfileByParams(params);
+      const profile = await profileRepository.getProfileByParams(params);
       expect(profile).toEqual(mockProfile);
       expect(mockDatabase.where).toHaveBeenCalledWith(params);
       expect(mockDatabase.first).toHaveBeenCalled();
@@ -58,25 +58,28 @@ describe('Profile Model Unit Tests', () => {
     it('should throw an error when fetching a profile by parameters fails', async () => {
       mockDatabase.first.mockRejectedValueOnce(new Error('Database error'));
 
-      await expect(profileModel.getProfileByParams({ id: 1 })).rejects.toThrow(
-        'Database error',
-      );
+      await expect(
+        profileRepository.getProfileByParams({ id: 1 }),
+      ).rejects.toThrow('Database error');
     });
 
     it('should create a new profile successfully', async () => {
       const newProfile = { nome: 'admin', descricao: 'Administrador' };
-      mockDatabase.insert.mockResolvedValueOnce([1]);
+      mockDatabase.insert().returning.mockResolvedValueOnce([newProfile]);
 
-      const result = await profileModel.createProfile(newProfile);
-      expect(result).toEqual(1);
+      const result = await profileRepository.createProfile(newProfile);
+      expect(result).toEqual(newProfile);
       expect(mockDatabase.insert).toHaveBeenCalledWith(newProfile);
+      expect(mockDatabase.insert().returning).toHaveBeenCalledWith('*');
     });
 
     it('should throw an error when creating a profile fails', async () => {
-      mockDatabase.insert.mockRejectedValueOnce(new Error('Database error'));
+      mockDatabase
+        .insert()
+        .returning.mockRejectedValueOnce(new Error('Database error'));
 
       await expect(
-        profileModel.createProfile({
+        profileRepository.createProfile({
           nome: 'admin',
           descricao: 'Administrador',
         }),
@@ -84,23 +87,27 @@ describe('Profile Model Unit Tests', () => {
     });
 
     it('should update a profile successfully', async () => {
-      const mockUpdatedRows = 1;
-      mockDatabase.update.mockResolvedValueOnce(mockUpdatedRows);
+      const updatedProfile = {
+        id: 1,
+        nome: 'Updated Admin',
+        descricao: 'Administrador',
+      };
+      mockDatabase.update().returning.mockResolvedValueOnce([updatedProfile]);
 
-      const id = 1;
-      const updatedProfile = { nome: 'Updated Admin' };
-      const result = await profileModel.updateProfile(id, updatedProfile);
+      const result = await profileRepository.updateProfile(1, updatedProfile);
 
-      expect(result).toBe(mockUpdatedRows);
-      expect(mockDatabase.where).toHaveBeenCalledWith({ id });
+      expect(result).toEqual(updatedProfile);
       expect(mockDatabase.update).toHaveBeenCalledWith(updatedProfile);
+      expect(mockDatabase.update().returning).toHaveBeenCalledWith('*');
     });
 
     it('should throw an error when updating a profile fails', async () => {
-      mockDatabase.update.mockRejectedValueOnce(new Error('Database error'));
+      mockDatabase
+        .update()
+        .returning.mockRejectedValueOnce(new Error('Database error'));
 
       await expect(
-        profileModel.updateProfile(1, { nome: 'Updated Admin' }),
+        profileRepository.updateProfile(1, { nome: 'Updated Admin' }),
       ).rejects.toThrow('Database error');
     });
 
@@ -109,7 +116,7 @@ describe('Profile Model Unit Tests', () => {
       mockDatabase.delete.mockResolvedValueOnce(mockDeletedRows);
 
       const id = 1;
-      const result = await profileModel.deleteProfile(id);
+      const result = await profileRepository.deleteProfile(id);
 
       expect(result).toBe(mockDeletedRows);
       expect(mockDatabase.where).toHaveBeenCalledWith({ id });
@@ -119,7 +126,7 @@ describe('Profile Model Unit Tests', () => {
     it('should throw an error when deleting a profile fails', async () => {
       mockDatabase.delete.mockRejectedValueOnce(new Error('Database error'));
 
-      await expect(profileModel.deleteProfile(1)).rejects.toThrow(
+      await expect(profileRepository.deleteProfile(1)).rejects.toThrow(
         'Database error',
       );
     });
