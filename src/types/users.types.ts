@@ -1,5 +1,7 @@
+import { ProfileFilter } from './profiles.types';
+
 export type User = {
-  id?: number;
+  id: number;
   nome: string;
   email: string;
   senha: string;
@@ -8,12 +10,29 @@ export type User = {
   data_update?: string;
 };
 
+export type UserFilter = {
+  id?: number;
+  nome?: string;
+  email?: string;
+};
+
+export type UserInput = {
+  nome: string;
+  email: string;
+  senha: string;
+  perfis?: ProfileFilter[];
+};
+
 export interface UserRepository {
   getAllUsers: () => Promise<User[]>;
-  getUserByParams: (params: Partial<User>) => Promise<User | undefined>;
-  createUser: (
-    user: Omit<User, 'id' | 'data_criacao' | 'data_update'>,
-  ) => Promise<number | undefined>;
-  updateUser: (id: number, user: Partial<User>) => Promise<number>;
+  getUserByParams: (filters: UserFilter) => Promise<User | undefined>;
+  createUser: (user: UserInput) => Promise<User | undefined>;
+  updateUser: (id: number, user: Partial<User>) => Promise<User>;
   deleteUser: (id: number) => Promise<number>;
 }
+
+export type argsType = {
+  id: number;
+  input: UserInput;
+  filter: UserFilter;
+};

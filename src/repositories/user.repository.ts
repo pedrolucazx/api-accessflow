@@ -1,5 +1,10 @@
-import { database } from '@/database';
-import type { User, UserRepository } from '@/types/users.types';
+import { database } from '../database';
+import type {
+  User,
+  UserFilter,
+  UserInput,
+  UserRepository,
+} from '../types/users.types';
 
 export const userRepository: UserRepository = {
   getAllUsers: async (): Promise<User[]> => {
@@ -11,7 +16,7 @@ export const userRepository: UserRepository = {
     }
   },
 
-  getUserByParams: async (params: Partial<User>): Promise<User | undefined> => {
+  getUserByParams: async (params: UserFilter): Promise<User | undefined> => {
     try {
       return await database<User>('usuarios').where(params).first();
     } catch (error) {
@@ -20,21 +25,35 @@ export const userRepository: UserRepository = {
     }
   },
 
-  createUser: async (
-    user: Omit<User, 'id' | 'data_criacao' | 'data_update'>,
-  ): Promise<number | undefined> => {
+  createUser: async (data: UserInput): Promise<User | undefined> => {
     try {
-      const [id] = await database<User>('usuarios').insert(user);
-      return id;
+      return await database.transaction(async (trx) => {
+        const { perfis, ...user } = data;
+        const [createdUser] = await trx<User>('usuarios')
+          .insert(user)
+          .returning('*');
+
+        const userProfiles = perfis?.map(({ id }) => ({
+          usuario_id: createdUser?.id,
+          perfil_id: id,
+        }));
+
+        await trx('usuarios_perfis').insert(userProfiles);
+        return createdUser;
+      });
     } catch (error) {
       console.error(error);
       throw error;
     }
   },
 
-  updateUser: async (id: number, user: Partial<User>): Promise<number> => {
+  updateUser: async (id: number, user: Partial<User>): Promise<User> => {
     try {
-      return await database<User>('usuarios').where({ id }).update(user);
+      const [updatedUser] = await database<User>('usuarios')
+        .where({ id })
+        .update(user)
+        .returning('*');
+      return updatedUser;
     } catch (error) {
       console.error(error);
       throw error;
