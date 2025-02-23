@@ -1,4 +1,4 @@
-import { ProfileFilter } from './profiles.types';
+import { Profile, ProfileFilter } from './profiles.types';
 
 export type User = {
   id: number;
@@ -26,9 +26,10 @@ export type UserInput = {
 export interface UserRepository {
   getAllUsers: () => Promise<User[]>;
   getUserByParams: (filters: UserFilter) => Promise<User | undefined>;
-  createUser: (user: UserInput) => Promise<User | undefined>;
-  updateUser: (id: number, user: Partial<User>) => Promise<User>;
+  createUser: (data: UserInput) => Promise<User | undefined>;
+  updateUser: (id: number, data: UserInput) => Promise<User | undefined>;
   deleteUser: (id: number) => Promise<number>;
+  getUserProfiles: (userId: number) => Promise<Profile[]>;
 }
 
 export type argsType = {
