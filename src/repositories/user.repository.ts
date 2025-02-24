@@ -1,9 +1,11 @@
 import { Profile } from '@/types/profiles.types';
 import { database } from '../database';
 import type {
+  AssignedProfile,
   User,
   UserFilter,
   UserInput,
+  UserProfileAssignment,
   UserRepository,
 } from '../types/users.types';
 
@@ -28,20 +30,28 @@ export const userRepository: UserRepository = {
 
   createUser: async (data: UserInput): Promise<User | undefined> => {
     try {
-      return await database.transaction(async (trx) => {
-        const { perfis, ...user } = data;
-        const [createdUser] = await trx<User>('usuarios')
-          .insert(user)
-          .returning('*');
+      const [createdUser] = await database<User>('usuarios')
+        .insert(data)
+        .returning('*');
 
-        const userProfiles = perfis?.map(({ id }) => ({
-          usuario_id: createdUser?.id,
-          perfil_id: id,
-        }));
+      return createdUser;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
 
-        await trx('usuarios_perfis').insert(userProfiles);
-        return createdUser;
-      });
+  assignProfile: async (
+    data: UserProfileAssignment,
+  ): Promise<AssignedProfile> => {
+    try {
+      const [assignedProfiles] = await database<AssignedProfile>(
+        'usuarios_perfis',
+      )
+        .insert(data)
+        .returning('*');
+
+      return assignedProfiles;
     } catch (error) {
       console.error(error);
       throw error;
@@ -50,23 +60,25 @@ export const userRepository: UserRepository = {
 
   updateUser: async (id: number, data: UserInput): Promise<User> => {
     try {
-      return await database.transaction(async (trx) => {
-        const { perfis, ...user } = data;
-        const [updatedUser] = await trx<User>('usuarios')
-          .where({ id })
-          .update(user)
-          .returning('*');
+      const [updatedUser] = await database<User>('usuarios')
+        .where({ id })
+        .update(data)
+        .returning('*');
 
-        const userProfiles = perfis?.map(({ id }) => ({
-          usuario_id: updatedUser?.id,
-          perfil_id: id,
-        }));
+      return updatedUser;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
 
-        await trx('usuarios_perfis').where({ usuario_id: id }).delete();
-        await trx('usuarios_perfis').insert(userProfiles);
+  unassignProfile: async (usuario_id: number): Promise<number> => {
+    try {
+      const affectedRows = await database('usuarios_perfis')
+        .where({ usuario_id })
+        .delete();
 
-        return updatedUser;
-      });
+      return affectedRows;
     } catch (error) {
       console.error(error);
       throw error;
@@ -75,11 +87,10 @@ export const userRepository: UserRepository = {
 
   deleteUser: async (id: number): Promise<number> => {
     try {
-      return await database.transaction(async (trx) => {
-        await trx('usuarios_perfis').where({ usuario_id: id }).delete();
-        const deletedRows = await trx<User>('usuarios').where({ id }).delete();
-        return deletedRows;
-      });
+      const deletedRows = await database<User>('usuarios')
+        .where({ id })
+        .delete();
+      return deletedRows;
     } catch (error) {
       console.error(error);
       throw error;

@@ -2,8 +2,9 @@ import { database } from '@/database';
 import { userRepository } from '@/repositories/user.repository';
 import { User, UserInput } from '@/types/users.types';
 
-describe.skip('User Model Integration Tests', () => {
+describe('User Repository Integration Tests', () => {
   let latestUser: Pick<User, 'id'> | undefined;
+
   beforeAll(async () => {
     latestUser = await database<User>('usuarios')
       .select('id')
@@ -11,7 +12,7 @@ describe.skip('User Model Integration Tests', () => {
       .first();
   });
 
-  it('should return all users', async () => {
+  it('should retrieve all users from the database', async () => {
     const users = await userRepository.getAllUsers();
     expect(users).toHaveLength(2);
     expect(users).toEqual(
@@ -34,9 +35,8 @@ describe.skip('User Model Integration Tests', () => {
     );
   });
 
-  it('should return a specific user matching the parameters', async () => {
+  it('should retrieve a user matching the specified parameters', async () => {
     const user = await userRepository.getUserByParams({ id: 1 });
-
     expect(user).toEqual(
       expect.objectContaining({
         ativo: 1,
@@ -48,30 +48,50 @@ describe.skip('User Model Integration Tests', () => {
     );
   });
 
-  it('should create a user and return the inserted ID', async () => {
+  it('should create a new user and return its details', async () => {
     const mockUser: UserInput = {
-      senha: 'Senha@321',
-      nome: 'Novo Usuário',
-      email: 'novousuario@exemplo.com',
+      senha: 'Password@123',
+      nome: 'New User',
+      email: 'newuser@example.com',
     };
+
     const result = await userRepository.createUser(mockUser);
-    expect(result).toEqual(expect.any(Number));
+
+    expect(result).toEqual({
+      ativo: 1,
+      data_criacao: expect.any(String),
+      data_update: expect.any(String),
+      email: 'newuser@example.com',
+      id: 3,
+      nome: 'New User',
+      senha: 'Password@123',
+    });
   });
 
-  it('should update a user and return the number of affected rows', async () => {
+  it('should update an existing user and return the updated record', async () => {
     const id = latestUser?.id;
     const updatedUser: UserInput = {
       nome: 'Updated User',
-      email: '',
-      senha: '',
+      email: 'updateduser@example.com',
+      senha: 'NewPassword@321',
     };
+
     const updatedRows = await userRepository.updateUser(id!, updatedUser);
-    expect(updatedRows).toBe(1);
+
+    expect(updatedRows).toEqual({
+      ativo: 1,
+      data_criacao: expect.any(String),
+      data_update: expect.any(String),
+      email: 'updateduser@example.com',
+      id: 2,
+      nome: 'Updated User',
+      senha: 'NewPassword@321',
+    });
   });
 
   it('should delete a user and return the number of affected rows', async () => {
     const id = latestUser?.id;
-    const deleteRows = await userRepository.deleteUser(id!);
-    expect(deleteRows).toBe(1);
+    const deletedRows = await userRepository.deleteUser(id!);
+    expect(deletedRows).toBe(1);
   });
 });

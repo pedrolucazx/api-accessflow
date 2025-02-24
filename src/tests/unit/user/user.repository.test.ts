@@ -1,19 +1,19 @@
 import { userRepository } from '@/repositories/user.repository';
 import { database } from '@/database';
-import { User, UserInput } from '@/types/users.types';
+import { User, UserInput, UserProfileAssignment } from '@/types/users.types';
 
 jest.mock('@/database');
 
 const createMockConnection = () => ({
   select: jest.fn(),
-  insert: jest.fn(),
+  insert: jest.fn().mockReturnValue({ returning: jest.fn() }),
   where: jest.fn().mockReturnThis(),
   first: jest.fn(),
-  update: jest.fn(),
+  update: jest.fn().mockReturnValue({ returning: jest.fn() }),
   delete: jest.fn(),
 });
 
-describe.skip('User Model Unit Tests', () => {
+describe('User Model Unit Tests', () => {
   let mockDatabase: ReturnType<typeof createMockConnection>;
 
   beforeEach(() => {
@@ -71,35 +71,78 @@ describe.skip('User Model Unit Tests', () => {
     expect(mockDatabase.first).toHaveBeenCalled();
   });
 
-  it.skip('should create a new user successfully', async () => {
-    const newUser = {
+  it('should create a new user successfully', async () => {
+    const newUser: UserInput = {
       nome: 'Novo Usuário',
       email: 'novousuario@exemplo.com',
       senha: 'Senha@321',
-      ativo: true,
     };
-    mockDatabase.insert.mockResolvedValueOnce([1]);
+
+    mockDatabase
+      .insert()
+      .returning.mockResolvedValueOnce([{ id: 1, ...newUser }]);
 
     const result = await userRepository.createUser(newUser);
-    expect(result).toEqual(1);
+    expect(result).toEqual({
+      id: 1,
+      nome: 'Novo Usuário',
+      email: 'novousuario@exemplo.com',
+      senha: 'Senha@321',
+    });
     expect(mockDatabase.insert).toHaveBeenCalledWith(newUser);
+    expect(mockDatabase.insert().returning).toHaveBeenCalledWith('*');
   });
 
-  it.skip('should update a user successfully', async () => {
-    const mockUpdatedRows = 1;
-    mockDatabase.update.mockResolvedValueOnce(mockUpdatedRows);
-
-    const id = 1;
-    const updatedUser: UserInput = {
-      nome: 'Updated User',
-      email: '',
-      senha: '',
+  it('should assosite profile to user successfully', async () => {
+    const newAssosite: UserProfileAssignment = {
+      usuario_id: 1,
+      perfil_id: 1,
     };
-    const result = await userRepository.updateUser(id, updatedUser);
 
-    expect(result).toBe(mockUpdatedRows);
-    expect(mockDatabase.where).toHaveBeenCalledWith({ id });
-    expect(mockDatabase.update).toHaveBeenCalledWith(updatedUser);
+    mockDatabase
+      .insert()
+      .returning.mockResolvedValueOnce([{ id: 1, ...newAssosite }]);
+
+    const result = await userRepository.assignProfile(newAssosite);
+    expect(result).toEqual({
+      id: 1,
+      usuario_id: 1,
+      perfil_id: 1,
+    });
+    expect(mockDatabase.insert).toHaveBeenCalledWith(newAssosite);
+    expect(mockDatabase.insert().returning).toHaveBeenCalledWith('*');
+  });
+
+  it('should unassosite profile to user successfully', async () => {
+    const mockDeletedRows = 1;
+    mockDatabase.delete.mockResolvedValueOnce(mockDeletedRows);
+    const usuario_id = 1;
+    const result = await userRepository.unassignProfile(usuario_id);
+    expect(result).toEqual(mockDeletedRows);
+    expect(mockDatabase.where).toHaveBeenCalledWith({ usuario_id });
+    expect(mockDatabase.delete).toHaveBeenCalled();
+  });
+
+  it('should update a user successfully', async () => {
+    const userInput: UserInput = {
+      nome: 'Updated User',
+      email: 'anymail@mail.com',
+      senha: 'Senha@321',
+    };
+    mockDatabase
+      .update()
+      .returning.mockResolvedValueOnce([{ id: 1, ...userInput }]);
+
+    const result = await userRepository.updateUser(1, userInput);
+
+    expect(result).toEqual({
+      id: 1,
+      nome: 'Updated User',
+      email: 'anymail@mail.com',
+      senha: 'Senha@321',
+    });
+    expect(mockDatabase.update).toHaveBeenCalledWith(userInput);
+    expect(mockDatabase.update().returning).toHaveBeenCalledWith('*');
   });
 
   it('should delete a user successfully', async () => {
@@ -114,7 +157,7 @@ describe.skip('User Model Unit Tests', () => {
     expect(mockDatabase.delete).toHaveBeenCalled();
   });
 
-  it('should throw an error when fetching all users fails', async () => {
+  it('should throw an error when fetching all users', async () => {
     mockDatabase.select.mockRejectedValueOnce(new Error('Database error'));
 
     await expect(userRepository.getAllUsers()).rejects.toThrow(
@@ -122,7 +165,7 @@ describe.skip('User Model Unit Tests', () => {
     );
   });
 
-  it('should throw an error when fetching a user by parameters fails', async () => {
+  it('should throw an error when fetching a user by parameters', async () => {
     mockDatabase.first.mockRejectedValueOnce(new Error('Database error'));
 
     await expect(userRepository.getUserByParams({ id: 1 })).rejects.toThrow(
@@ -130,8 +173,10 @@ describe.skip('User Model Unit Tests', () => {
     );
   });
 
-  it.skip('should throw an error when creating a user fails', async () => {
-    mockDatabase.insert.mockRejectedValueOnce(new Error('Database error'));
+  it('should throw an error when creating a user', async () => {
+    mockDatabase
+      .insert()
+      .returning.mockRejectedValueOnce(new Error('Database error'));
 
     await expect(
       userRepository.createUser({
@@ -142,8 +187,31 @@ describe.skip('User Model Unit Tests', () => {
     ).rejects.toThrow('Database error');
   });
 
-  it.skip('should throw an error when updating a user fails', async () => {
-    mockDatabase.update.mockRejectedValueOnce(new Error('Database error'));
+  it('should throw an error when assoate profile to user', async () => {
+    mockDatabase
+      .insert()
+      .returning.mockRejectedValueOnce(new Error('Database error'));
+
+    await expect(
+      userRepository.assignProfile({
+        usuario_id: 1,
+        perfil_id: 1,
+      }),
+    ).rejects.toThrow('Database error');
+  });
+
+  it('should throw an error when unassoate profile to user', async () => {
+    mockDatabase.delete.mockRejectedValueOnce(new Error('Database error'));
+
+    await expect(userRepository.unassignProfile(1)).rejects.toThrow(
+      'Database error',
+    );
+  });
+
+  it('should throw an error when updating a user', async () => {
+    mockDatabase
+      .update()
+      .returning.mockRejectedValueOnce(new Error('Database error'));
 
     await expect(
       userRepository.updateUser(1, {
