@@ -8,21 +8,25 @@ export const userService = {
   getAllUsers: async (): Promise<Omit<User, 'senha'>[] | undefined> => {
     try {
       const users = await userRepository.getAllUsers();
-      if (!users?.length) throw new Error('No users found');
+      if (!users?.length) {
+        throw new Error('No users found');
+      }
       return users?.map(({ senha, ...user }) => user);
     } catch (error) {
       handleError('Error fetching users:', error);
     }
   },
 
-  getUserByParams: async (params: UserFilter): Promise<User | undefined> => {
+  getUserByParams: async (filter: UserFilter): Promise<User | undefined> => {
     try {
-      if (!Object.keys(params).length) {
+      if (!Object.keys(filter).length) {
         throw new Error('At least one parameter must be provided.');
       }
 
-      const user = await userRepository.getUserByParams(params);
-      if (!user) throw new Error('User not found.');
+      const user = await userRepository.getUserByParams(filter);
+      if (!user) {
+        throw new Error('User not found.');
+      }
 
       return user;
     } catch (error) {
@@ -34,7 +38,10 @@ export const userService = {
     try {
       const { perfis, ...user } = data;
 
-      if (Object.values(user).some((value) => !value)) {
+      if (
+        !Object.keys(user).length ||
+        Object.values(user).some((value) => !value)
+      ) {
         throw new Error('User data is incomplete or invalid.');
       }
 

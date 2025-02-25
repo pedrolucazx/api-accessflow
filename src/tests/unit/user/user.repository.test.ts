@@ -5,12 +5,13 @@ import { User, UserInput, UserProfileAssignment } from '@/types/users.types';
 jest.mock('@/database');
 
 const createMockConnection = () => ({
-  select: jest.fn(),
+  select: jest.fn().mockReturnThis(),
   insert: jest.fn().mockReturnValue({ returning: jest.fn() }),
   where: jest.fn().mockReturnThis(),
   first: jest.fn(),
   update: jest.fn().mockReturnValue({ returning: jest.fn() }),
   delete: jest.fn(),
+  join: jest.fn().mockReturnThis(),
 });
 
 describe('User Model Unit Tests', () => {
@@ -226,6 +227,29 @@ describe('User Model Unit Tests', () => {
     mockDatabase.delete.mockRejectedValueOnce(new Error('Database error'));
 
     await expect(userRepository.deleteUser(1)).rejects.toThrow(
+      'Database error',
+    );
+  });
+
+  it('should return user profiles successfully', async () => {
+    mockDatabase.select.mockResolvedValueOnce([
+      { id: 1, nome: 'admin', descricao: 'Administrador' },
+    ]);
+
+    const result = await userRepository.getUserProfiles(1);
+    expect(result).toEqual([
+      { id: 1, nome: 'admin', descricao: 'Administrador' },
+    ]);
+    expect(mockDatabase.select).toHaveBeenCalledWith(
+      'p.id',
+      'p.nome',
+      'p.descricao',
+    );
+  });
+
+  it('should throw an error if database query fails', async () => {
+    mockDatabase.select.mockRejectedValueOnce(new Error('Database error'));
+    await expect(userRepository.getUserProfiles(1)).rejects.toThrow(
       'Database error',
     );
   });
