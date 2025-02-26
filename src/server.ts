@@ -8,10 +8,10 @@ interface ServerStart {
   server: ApolloServer;
   url: string;
 }
-
+const port = Number(process.env.PORT);
 async function startApolloServer(
   database: Knex,
-  listenOptions: ListenOptions = { port: 4000 },
+  listenOptions: ListenOptions = { port },
 ): Promise<ServerStart> {
   const server = new ApolloServer({
     typeDefs,

@@ -17,24 +17,28 @@ export const userService = {
     }
   },
 
-  getUserByParams: async (filter: UserFilter): Promise<User | undefined> => {
+  getUserByParams: async (
+    filter: UserFilter,
+  ): Promise<Omit<User, 'senha'> | undefined> => {
     try {
       if (!Object.keys(filter).length) {
         throw new Error('At least one parameter must be provided.');
       }
 
-      const user = await userRepository.getUserByParams(filter);
-      if (!user) {
+      const result = await userRepository.getUserByParams(filter);
+      if (!result) {
         throw new Error('User not found.');
       }
-
+      const { senha, ...user } = result;
       return user;
     } catch (error) {
       handleError('Error fetching user by parameters:', error);
     }
   },
 
-  createUser: async (data: UserInput): Promise<User | undefined> => {
+  createUser: async (
+    data: UserInput,
+  ): Promise<Omit<User, 'senha'> | undefined> => {
     try {
       const { perfis, ...user } = data;
 
@@ -52,13 +56,13 @@ export const userService = {
         }
       }
 
-      const createdUser = await userRepository.createUser(user);
-      if (!createdUser) throw new Error('Failed to create user.');
+      const result = await userRepository.createUser(user);
+      if (!result) throw new Error('Failed to create user.');
 
       if (perfis?.length) {
         for (const { id } of perfis) {
           const assignedProfile = await userRepository.assignProfile({
-            usuario_id: createdUser.id,
+            usuario_id: result.id,
             perfil_id: id!,
           });
 
@@ -67,7 +71,7 @@ export const userService = {
           }
         }
       }
-
+      const { senha, ...createdUser } = result;
       return createdUser;
     } catch (error) {
       handleError('Error creating user:', error);
@@ -77,7 +81,7 @@ export const userService = {
   updateUser: async (
     id: number,
     data: UserInput,
-  ): Promise<User | undefined> => {
+  ): Promise<Omit<User, 'senha'> | undefined> => {
     try {
       const { perfis, ...user } = data;
       if (!id || !user || !Object.keys(user).length) {
@@ -91,8 +95,8 @@ export const userService = {
         }
       }
 
-      const updatedUser = await userRepository.updateUser(id, user);
-      if (!updatedUser) {
+      const result = await userRepository.updateUser(id, user);
+      if (!result) {
         throw new Error(`No user found with ID ${id} to update.`);
       }
 
@@ -100,7 +104,7 @@ export const userService = {
         await userRepository.unassignProfile(id);
         for (const { id } of perfis) {
           const assignedProfile = await userRepository.assignProfile({
-            usuario_id: updatedUser?.id,
+            usuario_id: result?.id,
             perfil_id: id!,
           });
 
@@ -110,6 +114,7 @@ export const userService = {
         }
       }
 
+      const { senha, ...updatedUser } = result;
       return updatedUser;
     } catch (error) {
       handleError(`Error updating user with ID ${id}:`, error);

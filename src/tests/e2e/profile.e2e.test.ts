@@ -56,7 +56,7 @@ describe('Profile End-to-End Tests', () => {
   let urlServer: string;
 
   beforeAll(async () => {
-    const { server, url } = await startApolloServer(database, { port: 3333 });
+    const { server, url } = await startApolloServer(database, { port: 4001 });
     apolloServer = server;
     urlServer = url;
   });

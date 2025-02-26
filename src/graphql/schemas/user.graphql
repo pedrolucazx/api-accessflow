@@ -2,6 +2,7 @@ type User {
   id: Int
   nome: String!
   email: String!
+  senha: String!
   ativo: Boolean!
   data_criacao: String!
   data_update: String!

@@ -71,8 +71,8 @@ describe('User Service Unit Tests', () => {
     );
   });
 
-  it('should fetch a profile by valid parameters successfully', async () => {
-    const expectedUser = mockUsers[0];
+  it('should fetch a user by valid parameters successfully', async () => {
+    const { senha, ...expectedUser } = mockUsers[0];
     (userRepository.getUserByParams as jest.Mock).mockResolvedValue(
       expectedUser,
     );
@@ -136,7 +136,6 @@ describe('User Service Unit Tests', () => {
       id: 1,
       ativo: true,
       nome: 'new user',
-      senha: 'Senha@321',
       email: 'newuser@mail.com',
       data_criacao: '2025-01-16T02:54:02.311Z',
       data_update: '2025-01-16T02:54:02.311Z',
@@ -270,7 +269,6 @@ describe('User Service Unit Tests', () => {
       email: 'admin@exemplo.com',
       id: 1,
       nome: 'Admin Usuário',
-      senha: 'senhaAdmin',
     });
     expect(userRepository.updateUser).toHaveBeenCalledWith(
       1,
