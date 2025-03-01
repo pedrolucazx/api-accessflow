@@ -23,6 +23,12 @@ export type UserInput = {
   perfis?: ProfileFilter[];
 };
 
+export type SignUpInput = {
+  nome: string;
+  email: string;
+  senha: string;
+};
+
 export type UserProfileAssignment = {
   usuario_id: number;
   perfil_id: number;

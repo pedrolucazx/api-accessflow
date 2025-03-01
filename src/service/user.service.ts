@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { profileRepository } from '../repositories/profile.repository';
 import { userRepository } from '../repositories/user.repository';
 import { Profile } from '../types/profiles.types';
-import { User, UserFilter, UserInput } from '../types/users.types';
+import { SignUpInput, User, UserFilter, UserInput } from '../types/users.types';
 import { handleError } from '../utils/handleError';
 
 export const userService = {
@@ -38,6 +38,7 @@ export const userService = {
   createUser: async (data: UserInput): Promise<User | undefined> => {
     try {
       const { perfis, ...user } = data;
+      const profilesIDs = [];
       if (
         !Object.keys(user).length ||
         Object.values(user).some((value) => !value)
@@ -47,8 +48,9 @@ export const userService = {
 
       const hashedPassword = await bcrypt.hash(user?.senha, 10);
       if (perfis?.length) {
-        for (const { id } of perfis) {
-          const profile = await profileRepository.getProfileByParams({ id });
+        for (const perfil of perfis) {
+          const profile = await profileRepository.getProfileByParams(perfil);
+          profilesIDs.push(profile?.id);
           if (!profile) throw new Error('Profile not found.');
         }
       }
@@ -60,7 +62,7 @@ export const userService = {
       if (!createdUser) throw new Error('Failed to create user.');
 
       if (perfis?.length) {
-        for (const { id } of perfis) {
+        for (const id of profilesIDs) {
           const assignedProfile = await userRepository.assignProfile({
             usuario_id: createdUser.id,
             perfil_id: id!,
@@ -84,13 +86,15 @@ export const userService = {
   ): Promise<User | undefined> => {
     try {
       const { perfis, ...user } = data;
+      const profilesIDs = [];
       if (!id || !user || !Object.keys(user).length) {
         throw new Error('Invalid user data or ID.');
       }
 
       if (perfis?.length) {
-        for (const { id } of perfis) {
-          const profile = await profileRepository.getProfileByParams({ id });
+        for (const perfil of perfis) {
+          const profile = await profileRepository.getProfileByParams(perfil);
+          profilesIDs.push(profile?.id);
           if (!profile) throw new Error('Profile not found.');
         }
       }
@@ -105,7 +109,7 @@ export const userService = {
 
       if (perfis?.length) {
         await userRepository.unassignProfile(id);
-        for (const { id } of perfis) {
+        for (const id of profilesIDs) {
           const assignedProfile = await userRepository.assignProfile({
             usuario_id: updatedUser?.id,
             perfil_id: id!,
@@ -148,6 +152,19 @@ export const userService = {
       return await userRepository.getUserProfiles(userId);
     } catch (error) {
       handleError(`Error getting profiles for user with ID ${userId}:`, error);
+    }
+  },
+
+  signUp: async (user: SignUpInput): Promise<User | undefined> => {
+    try {
+      const createdUser = await userService.createUser({
+        ...user,
+        perfis: [{ nome: 'comum', descricao: 'Comum' }],
+      });
+
+      return createdUser;
+    } catch (error) {
+      handleError('Error signing up user:', error);
     }
   },
 };

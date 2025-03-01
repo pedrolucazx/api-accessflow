@@ -9,13 +9,13 @@ const resolvers = {
     },
   },
   Query: {
-    getAllUsers: async (): Promise<Omit<User, 'senha'>[] | undefined> => {
+    getAllUsers: async (): Promise<User[] | undefined> => {
       return await userService.getAllUsers();
     },
     getUserByParams: async (
       _parent: unknown,
       args: argsType,
-    ): Promise<Omit<User, 'senha'> | undefined> => {
+    ): Promise<User | undefined> => {
       return await userService.getUserByParams(args?.filter);
     },
   },
@@ -23,13 +23,13 @@ const resolvers = {
     createUser: async (
       _parent: unknown,
       args: argsType,
-    ): Promise<Omit<User, 'senha'> | undefined> => {
+    ): Promise<User | undefined> => {
       return await userService.createUser(args?.input);
     },
     updateUser: async (
       _parent: unknown,
       args: argsType,
-    ): Promise<Omit<User, 'senha'> | undefined> => {
+    ): Promise<User | undefined> => {
       return await userService.updateUser(args?.id, args?.input);
     },
     deleteUser: async (
@@ -37,6 +37,12 @@ const resolvers = {
       args: argsType,
     ): Promise<string | undefined> => {
       return await userService.deleteUser(args?.id);
+    },
+    signUp: async (
+      _parent: unknown,
+      args: argsType,
+    ): Promise<User | undefined> => {
+      return await userService.signUp(args?.input);
     },
   },
 };

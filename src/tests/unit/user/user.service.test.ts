@@ -249,21 +249,21 @@ describe('User Service Unit Tests', () => {
     (userRepository.updateUser as jest.Mock).mockResolvedValueOnce(
       mockUsers[0],
     );
-    (userRepository.unassignProfile as jest.Mock).mockResolvedValueOnce(true);
     (profileRepository.getProfileByParams as jest.Mock).mockResolvedValue({
       id: 1,
       nome: 'admin',
       descricao: 'Administrador',
     });
+    (userRepository.unassignProfile as jest.Mock).mockResolvedValueOnce(true);
     (userRepository.assignProfile as jest.Mock).mockResolvedValue({
       id: 1,
       usuario_id: 1,
-      perfil_id: 2,
+      perfil_id: 1,
     });
 
     const result = await userService.updateUser(1, {
       ...mockUsers[0],
-      perfis: [{ id: 2 }],
+      perfis: [{ id: 1 }],
     });
     expect(result).toEqual({
       ativo: true,
@@ -280,7 +280,7 @@ describe('User Service Unit Tests', () => {
     );
     expect(userRepository.unassignProfile).toHaveBeenCalledWith(1);
     expect(userRepository.assignProfile).toHaveBeenCalledWith({
-      perfil_id: 2,
+      perfil_id: 1,
       usuario_id: 1,
     });
   });
