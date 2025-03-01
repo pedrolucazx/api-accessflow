@@ -1,3 +1,4 @@
+import bcrypt from 'bcrypt';
 import { profileRepository } from '../repositories/profile.repository';
 import { userRepository } from '../repositories/user.repository';
 import { Profile } from '../types/profiles.types';
@@ -5,43 +6,38 @@ import { User, UserFilter, UserInput } from '../types/users.types';
 import { handleError } from '../utils/handleError';
 
 export const userService = {
-  getAllUsers: async (): Promise<Omit<User, 'senha'>[] | undefined> => {
+  getAllUsers: async (): Promise<User[] | undefined> => {
     try {
       const users = await userRepository.getAllUsers();
       if (!users?.length) {
         throw new Error('No users found');
       }
-      return users?.map(({ senha, ...user }) => user);
+      return users;
     } catch (error) {
       handleError('Error fetching users:', error);
     }
   },
 
-  getUserByParams: async (
-    filter: UserFilter,
-  ): Promise<Omit<User, 'senha'> | undefined> => {
+  getUserByParams: async (filter: UserFilter): Promise<User | undefined> => {
     try {
       if (!Object.keys(filter).length) {
         throw new Error('At least one parameter must be provided.');
       }
 
-      const result = await userRepository.getUserByParams(filter);
-      if (!result) {
+      const user = await userRepository.getUserByParams(filter);
+      if (!user) {
         throw new Error('User not found.');
       }
-      const { senha, ...user } = result;
+
       return user;
     } catch (error) {
       handleError('Error fetching user by parameters:', error);
     }
   },
 
-  createUser: async (
-    data: UserInput,
-  ): Promise<Omit<User, 'senha'> | undefined> => {
+  createUser: async (data: UserInput): Promise<User | undefined> => {
     try {
       const { perfis, ...user } = data;
-
       if (
         !Object.keys(user).length ||
         Object.values(user).some((value) => !value)
@@ -49,6 +45,7 @@ export const userService = {
         throw new Error('User data is incomplete or invalid.');
       }
 
+      const hashedPassword = await bcrypt.hash(user?.senha, 10);
       if (perfis?.length) {
         for (const { id } of perfis) {
           const profile = await profileRepository.getProfileByParams({ id });
@@ -56,13 +53,16 @@ export const userService = {
         }
       }
 
-      const result = await userRepository.createUser(user);
-      if (!result) throw new Error('Failed to create user.');
+      const createdUser = await userRepository.createUser({
+        ...user,
+        senha: hashedPassword,
+      });
+      if (!createdUser) throw new Error('Failed to create user.');
 
       if (perfis?.length) {
         for (const { id } of perfis) {
           const assignedProfile = await userRepository.assignProfile({
-            usuario_id: result.id,
+            usuario_id: createdUser.id,
             perfil_id: id!,
           });
 
@@ -71,7 +71,7 @@ export const userService = {
           }
         }
       }
-      const { senha, ...createdUser } = result;
+
       return createdUser;
     } catch (error) {
       handleError('Error creating user:', error);
@@ -81,7 +81,7 @@ export const userService = {
   updateUser: async (
     id: number,
     data: UserInput,
-  ): Promise<Omit<User, 'senha'> | undefined> => {
+  ): Promise<User | undefined> => {
     try {
       const { perfis, ...user } = data;
       if (!id || !user || !Object.keys(user).length) {
@@ -94,9 +94,12 @@ export const userService = {
           if (!profile) throw new Error('Profile not found.');
         }
       }
-
-      const result = await userRepository.updateUser(id, user);
-      if (!result) {
+      const hashedPassword = await bcrypt.hash(user?.senha, 10);
+      const updatedUser = await userRepository.updateUser(id, {
+        ...user,
+        senha: hashedPassword,
+      });
+      if (!updatedUser) {
         throw new Error(`No user found with ID ${id} to update.`);
       }
 
@@ -104,7 +107,7 @@ export const userService = {
         await userRepository.unassignProfile(id);
         for (const { id } of perfis) {
           const assignedProfile = await userRepository.assignProfile({
-            usuario_id: result?.id,
+            usuario_id: updatedUser?.id,
             perfil_id: id!,
           });
 
@@ -114,7 +117,6 @@ export const userService = {
         }
       }
 
-      const { senha, ...updatedUser } = result;
       return updatedUser;
     } catch (error) {
       handleError(`Error updating user with ID ${id}:`, error);
@@ -145,7 +147,7 @@ export const userService = {
       }
       return await userRepository.getUserProfiles(userId);
     } catch (error) {
-      handleError(`Error get profiles user with ID ${userId}:`, error);
+      handleError(`Error getting profiles for user with ID ${userId}:`, error);
     }
   },
 };

@@ -42,6 +42,7 @@ describe('User Service Unit Tests', () => {
         email: 'admin@exemplo.com',
         id: 1,
         nome: 'Admin Usuário',
+        senha: 'senhaAdmin',
       },
       {
         ativo: true,
@@ -50,6 +51,7 @@ describe('User Service Unit Tests', () => {
         email: 'usuario@exemplo.com',
         id: 2,
         nome: 'Usuário Comum',
+        senha: 'senhaComum',
       },
     ]);
     expect(userRepository.getAllUsers).toHaveBeenCalledTimes(1);
@@ -139,11 +141,12 @@ describe('User Service Unit Tests', () => {
       email: 'newuser@mail.com',
       data_criacao: '2025-01-16T02:54:02.311Z',
       data_update: '2025-01-16T02:54:02.311Z',
+      senha: 'Senha@321',
     });
     expect(userRepository.createUser).toHaveBeenCalledWith({
       email: 'newuser@mail.com',
       nome: 'new user',
-      senha: 'Senha@321',
+      senha: expect.any(String),
     });
     expect(userRepository.assignProfile).toHaveBeenCalledWith({
       perfil_id: 1,
@@ -269,10 +272,11 @@ describe('User Service Unit Tests', () => {
       email: 'admin@exemplo.com',
       id: 1,
       nome: 'Admin Usuário',
+      senha: 'senhaAdmin',
     });
     expect(userRepository.updateUser).toHaveBeenCalledWith(
       1,
-      expect.objectContaining(mockUsers[0]),
+      expect.objectContaining({ ...mockUsers[0], senha: expect.any(String) }),
     );
     expect(userRepository.unassignProfile).toHaveBeenCalledWith(1);
     expect(userRepository.assignProfile).toHaveBeenCalledWith({
@@ -395,7 +399,7 @@ describe('User Service Unit Tests', () => {
     );
 
     await expect(userService.getUserProfiles(1)).rejects.toThrow(
-      'Error get profiles user with ID 1: Database error',
+      'Error getting profiles for user with ID 1: Database error',
     );
   });
 });

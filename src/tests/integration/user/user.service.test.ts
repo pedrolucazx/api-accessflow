@@ -23,6 +23,7 @@ describe('User Service Integration Tests', () => {
         email: 'admin@exemplo.com',
         id: 1,
         nome: 'Admin Usuário',
+        senha: 'senhaAdmin',
       },
       {
         ativo: 1,
@@ -31,6 +32,7 @@ describe('User Service Integration Tests', () => {
         email: 'usuario@exemplo.com',
         id: 2,
         nome: 'Usuário Comum',
+        senha: 'senhaComum',
       },
     ]);
   });
@@ -45,6 +47,7 @@ describe('User Service Integration Tests', () => {
       email: 'admin@exemplo.com',
       data_update: expect.any(String),
       data_criacao: expect.any(String),
+      senha: 'senhaAdmin',
     });
   });
 
@@ -63,6 +66,7 @@ describe('User Service Integration Tests', () => {
       email: 'newuser@mail.com',
       data_update: expect.any(String),
       data_criacao: expect.any(String),
+      senha: expect.any(String),
     });
   });
 
@@ -82,6 +86,7 @@ describe('User Service Integration Tests', () => {
       email: 'update@mail.com',
       data_update: expect.any(String),
       data_criacao: expect.any(String),
+      senha: expect.any(String),
     });
   });
 
