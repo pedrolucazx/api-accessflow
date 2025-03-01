@@ -356,7 +356,6 @@ describe('User Service Unit Tests', () => {
 
   it('should throw an error if user is not found for deletion', async () => {
     const mockId = 1;
-    userRepository.deleteUser = jest.fn().mockResolvedValue(0);
     (userRepository.deleteUser as jest.Mock).mockResolvedValueOnce(undefined);
 
     await expect(userService.deleteUser(mockId)).rejects.toThrow(
@@ -401,5 +400,51 @@ describe('User Service Unit Tests', () => {
     await expect(userService.getUserProfiles(1)).rejects.toThrow(
       'Error getting profiles for user with ID 1: Database error',
     );
+  });
+
+  it('should successfully sign up a user with a default profile', async () => {
+    const userInput = {
+      nome: 'Novo Usuário',
+      email: 'novo@exemplo.com',
+      senha: 'SenhaSegura123',
+    };
+
+    const createdUser: User = {
+      id: 3,
+      ...userInput,
+      ativo: true,
+      data_criacao: new Date().toISOString(),
+      data_update: new Date().toISOString(),
+    };
+
+    jest.spyOn(userService, 'createUser').mockResolvedValue(createdUser);
+
+    const result = await userService.signUp(userInput);
+
+    expect(result).toEqual(createdUser);
+    expect(userService.createUser).toHaveBeenCalledWith({
+      ...userInput,
+      perfis: [{ nome: 'comum', descricao: 'Comum' }],
+    });
+  });
+
+  it('should throw an error database during sign up a user with a default profile', async () => {
+    const userInput = {
+      nome: 'Novo Usuário',
+      email: 'novo@exemplo.com',
+      senha: 'SenhaSegura123',
+    };
+
+    jest
+      .spyOn(userService, 'createUser')
+      .mockRejectedValue(new Error('Database error'));
+
+    await expect(userService.signUp(userInput)).rejects.toThrow(
+      'Error signing up user: Database error',
+    );
+    expect(userService.createUser).toHaveBeenCalledWith({
+      ...userInput,
+      perfis: [{ nome: 'comum', descricao: 'Comum' }],
+    });
   });
 });

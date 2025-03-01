@@ -83,6 +83,23 @@ describe('User End-to-End Tests', () => {
       deleteUser(id: $deleteUserId)
     }
   `;
+  const SIGNUP = `#graphql
+    mutation SignUp($input: signUpInput) {
+      signUp(input: $input) {
+        id
+        nome
+        email
+        ativo
+        data_criacao
+        data_update
+        perfis {
+          id
+          nome
+          descricao
+        }
+      }
+    }
+  `;
 
   let apolloServer: ApolloServer<BaseContext>;
   let urlServer: string;
@@ -250,6 +267,38 @@ describe('User End-to-End Tests', () => {
     expect(response.body.data.deleteUser).toBe(
       'User with ID 1 was successfully deleted.',
     );
+    expect(response.status).toBe(200);
+  });
+
+  it('should sign up a new user successfully', async () => {
+    const response = await request(urlServer)
+      .post('/')
+      .send({
+        query: SIGNUP,
+        variables: {
+          input: {
+            nome: 'Novo Usuário',
+            email: 'novo@exemplo.com',
+            senha: 'SenhaSegura123',
+          },
+        },
+      });
+
+    expect(response.body.data.signUp).toEqual({
+      ativo: true,
+      data_criacao: expect.any(String),
+      data_update: expect.any(String),
+      id: 4,
+      nome: 'Novo Usuário',
+      email: 'novo@exemplo.com',
+      perfis: [
+        {
+          id: 2,
+          nome: 'comum',
+          descricao: 'Comum',
+        },
+      ],
+    });
     expect(response.status).toBe(200);
   });
 });

@@ -1,6 +1,6 @@
 import { database } from '@/database';
 import { userService } from '@/service/user.service';
-import { User, UserInput } from '@/types/users.types';
+import { SignUpInput, User, UserInput } from '@/types/users.types';
 
 describe('User Service Integration Tests', () => {
   let latestUser: Pick<User, 'id'> | undefined;
@@ -97,5 +97,24 @@ describe('User Service Integration Tests', () => {
     expect(deletedProfile).toEqual(
       `User with ID ${id} was successfully deleted.`,
     );
+  });
+
+  it('should sign up a new user', async () => {
+    const newUser: SignUpInput = {
+      nome: 'new user',
+      email: 'signup@mail.com',
+      senha: 'Password@321',
+    };
+
+    const createdProfile = await userService.signUp(newUser);
+    expect(createdProfile).toEqual({
+      email: 'signup@mail.com',
+      id: 4,
+      nome: 'new user',
+      ativo: 1,
+      data_update: expect.any(String),
+      data_criacao: expect.any(String),
+      senha: expect.any(String),
+    });
   });
 });
