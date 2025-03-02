@@ -8,6 +8,15 @@ type User {
   perfis: [Profile]
 }
 
+type AuthenticatedUser {
+  id: Int!
+  nome: String!
+  email: String!
+  ativo: Boolean!
+  token: String!
+  perfis: [Profile]!
+}
+
 input UserInput {
   nome: String!
   email: String!
@@ -15,8 +24,13 @@ input UserInput {
   perfis: [ProfileFilterInput]
 }
 
-input signUpInput {
+input SignUpInput {
   nome: String!
+  email: String!
+  senha: String!
+}
+
+input LoginInput {
   email: String!
   senha: String!
 }
@@ -30,11 +44,12 @@ input UserFilter {
 type Query {
   getAllUsers: [User]
   getUserByParams(filter: UserFilter!): User
+  login(input: LoginInput): AuthenticatedUser
 }
 
 type Mutation {
   deleteUser(id: Int!): String!
   createUser(input: UserInput): User!
   updateUser(input: UserInput!, id: Int!): User
-  signUp(input: signUpInput): User
+  signUp(input: SignUpInput): User
 }

@@ -84,7 +84,7 @@ describe('User End-to-End Tests', () => {
     }
   `;
   const SIGNUP = `#graphql
-    mutation SignUp($input: signUpInput) {
+    mutation SignUp($input: SignUpInput) {
       signUp(input: $input) {
         id
         nome

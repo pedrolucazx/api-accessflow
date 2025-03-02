@@ -10,6 +10,22 @@ export type User = {
   data_update?: string;
 };
 
+export type AuthenticatedUser = {
+  id: number;
+  nome: string;
+  email: string;
+  ativo: boolean;
+  token: string;
+  iat: number;
+  exp: number;
+  perfis?: ProfileFilter[];
+};
+
+export type LoginInput = {
+  email: string;
+  senha: string;
+};
+
 export type UserFilter = {
   id?: number;
   nome?: string;

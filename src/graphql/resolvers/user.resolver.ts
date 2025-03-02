@@ -1,6 +1,6 @@
 import { Profile } from '@/types/profiles.types';
 import { userService } from '../../service/user.service';
-import { argsType, User } from '../../types/users.types';
+import { argsType, AuthenticatedUser, User } from '../../types/users.types';
 
 const resolvers = {
   User: {
@@ -17,6 +17,12 @@ const resolvers = {
       args: argsType,
     ): Promise<User | undefined> => {
       return await userService.getUserByParams(args?.filter);
+    },
+    login: async (
+      _parent: unknown,
+      args: argsType,
+    ): Promise<AuthenticatedUser | undefined> => {
+      return await userService.login(args?.input);
     },
   },
   Mutation: {
