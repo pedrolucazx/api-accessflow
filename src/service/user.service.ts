@@ -106,16 +106,31 @@ export const userService = {
           if (!profile) throw new Error('Profile not found.');
         }
       }
-      const hashedPassword = await bcrypt.hash(user?.senha, 10);
+
+      const existingUser = await userService.getUserByParams({ id });
+      const hashedPassword = user?.senha
+        ? await bcrypt.hash(user?.senha, 10)
+        : existingUser?.senha;
+
       const updatedUser = await userRepository.updateUser(id, {
+        ...existingUser,
         ...user,
         senha: hashedPassword,
+        data_update: new Date().toISOString(),
       });
+
       if (!updatedUser) {
         throw new Error(`No user found with ID ${id} to update.`);
       }
 
-      if (perfis?.length) {
+      const existingProfiles = await userService.getUserProfiles(
+        updatedUser.id,
+      );
+      const isAdmin = existingProfiles?.some(
+        (profile) => profile.nome === 'admin',
+      );
+
+      if (perfis?.length && isAdmin) {
         await userRepository.unassignProfile(id);
         for (const id of profilesIDs) {
           const assignedProfile = await userRepository.assignProfile({
@@ -189,7 +204,7 @@ export const userService = {
         nome: user.nome,
         email: user.email,
         ativo: user.ativo,
-        perfis: profiles?.map((p) => p.nome),
+        perfis: profiles,
         iat,
         exp,
       };

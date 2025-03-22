@@ -1,6 +1,6 @@
 import { database } from '@/database';
 import { userRepository } from '@/repositories/user.repository';
-import { User, UserInput } from '@/types/users.types';
+import { User, UserInput, UserUpdateInput } from '@/types/users.types';
 
 describe('User Repository Integration Tests', () => {
   let latestUser: Pick<User, 'id'> | undefined;
@@ -22,14 +22,12 @@ describe('User Repository Integration Tests', () => {
           email: 'admin@exemplo.com',
           id: 1,
           nome: 'Admin Usuário',
-          senha: 'senhaAdmin',
         }),
         expect.objectContaining({
           ativo: 1,
           email: 'usuario@exemplo.com',
           id: 2,
           nome: 'Usuário Comum',
-          senha: 'senhaComum',
         }),
       ]),
     );
@@ -43,7 +41,6 @@ describe('User Repository Integration Tests', () => {
         email: 'admin@exemplo.com',
         id: 1,
         nome: 'Admin Usuário',
-        senha: 'senhaAdmin',
       }),
     );
   });
@@ -64,16 +61,17 @@ describe('User Repository Integration Tests', () => {
       email: 'newuser@example.com',
       id: 3,
       nome: 'New User',
-      senha: 'Password@123',
+      senha: expect.any(String),
     });
   });
 
   it('should update an existing user and return the updated record', async () => {
     const id = latestUser?.id;
-    const updatedUser: UserInput = {
+    const updatedUser: UserUpdateInput = {
       nome: 'Updated User',
       email: 'updateduser@example.com',
       senha: 'NewPassword@321',
+      data_update: new Date().toISOString(),
     };
 
     const updatedRows = await userRepository.updateUser(id!, updatedUser);

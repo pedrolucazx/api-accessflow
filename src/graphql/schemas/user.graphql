@@ -24,6 +24,13 @@ input UserInput {
   perfis: [ProfileFilterInput]
 }
 
+input UserUpdateInput {
+  nome: String
+  email: String
+  senha: String
+  perfis: [ProfileFilterInput]
+}
+
 input SignUpInput {
   nome: String!
   email: String!
@@ -50,6 +57,6 @@ type Query {
 type Mutation {
   deleteUser(id: Int!): String!
   createUser(input: UserInput): User!
-  updateUser(input: UserInput!, id: Int!): User
+  updateUser(input: UserUpdateInput!, id: Int!): User
   signUp(input: SignUpInput): User
 }

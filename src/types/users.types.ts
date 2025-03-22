@@ -39,6 +39,14 @@ export type UserInput = {
   perfis?: ProfileFilter[];
 };
 
+export type UserUpdateInput = {
+  nome?: string;
+  email?: string;
+  senha?: string;
+  data_update: string;
+  perfis?: ProfileFilter[];
+};
+
 export type SignUpInput = {
   nome: string;
   email: string;
@@ -61,7 +69,7 @@ export interface UserRepository {
   getUserByParams: (filters: UserFilter) => Promise<User | undefined>;
   createUser: (data: UserInput) => Promise<User | undefined>;
   assignProfile: (data: UserProfileAssignment) => Promise<AssignedProfile>;
-  updateUser: (id: number, data: UserInput) => Promise<User | undefined>;
+  updateUser: (id: number, data: UserUpdateInput) => Promise<User | undefined>;
   deleteUser: (id: number) => Promise<number>;
   getUserProfiles: (userId: number) => Promise<Profile[]>;
   unassignProfile: (usuario_id: number) => Promise<number>;

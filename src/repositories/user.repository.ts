@@ -7,6 +7,7 @@ import type {
   UserInput,
   UserProfileAssignment,
   UserRepository,
+  UserUpdateInput,
 } from '../types/users.types';
 
 export const userRepository: UserRepository = {
@@ -58,7 +59,7 @@ export const userRepository: UserRepository = {
     }
   },
 
-  updateUser: async (id: number, data: UserInput): Promise<User> => {
+  updateUser: async (id: number, data: UserUpdateInput): Promise<User> => {
     try {
       const [updatedUser] = await database<User>('usuarios')
         .where({ id })

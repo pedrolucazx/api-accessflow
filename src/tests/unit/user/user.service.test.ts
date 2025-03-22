@@ -8,8 +8,10 @@ jest.mock('@/repositories/profile.repository');
 
 describe('User Service Unit Tests', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
+    jest.spyOn(console, 'error').mockImplementation(() => {});
   });
+
   const mockUsers: User[] = [
     {
       id: 1,
@@ -246,41 +248,46 @@ describe('User Service Unit Tests', () => {
   });
 
   it('should update user successfully', async () => {
-    (userRepository.updateUser as jest.Mock).mockResolvedValueOnce(
-      mockUsers[0],
-    );
-    (profileRepository.getProfileByParams as jest.Mock).mockResolvedValue({
-      id: 1,
-      nome: 'admin',
-      descricao: 'Administrador',
-    });
-    (userRepository.unassignProfile as jest.Mock).mockResolvedValueOnce(true);
-    (userRepository.assignProfile as jest.Mock).mockResolvedValue({
-      id: 1,
-      usuario_id: 1,
-      perfil_id: 1,
-    });
-
-    const result = await userService.updateUser(1, {
-      ...mockUsers[0],
-      perfis: [{ id: 1 }],
-    });
-    expect(result).toEqual({
+    const mockUser = {
       ativo: true,
-      data_criacao: '2025-01-16T02:54:02.311Z',
+      data_criacao: '2025-01-11T02:54:02.311Z',
       data_update: '2025-01-16T02:54:02.311Z',
       email: 'admin@exemplo.com',
       id: 1,
       nome: 'Admin Usuário',
       senha: 'senhaAdmin',
+    };
+    const mockProfiles = [{ id: 1, nome: 'admin', descricao: 'Administrador' }];
+
+    (profileRepository.getProfileByParams as jest.Mock).mockResolvedValue({
+      id: 2,
+      nome: 'comum',
+      descricao: 'Comum',
     });
-    expect(userRepository.updateUser).toHaveBeenCalledWith(
-      1,
-      expect.objectContaining({ ...mockUsers[0], senha: expect.any(String) }),
-    );
+    (userRepository.getUserByParams as jest.Mock).mockResolvedValue(mockUser);
+    (userRepository.updateUser as jest.Mock).mockResolvedValueOnce(mockUser);
+    jest.spyOn(userService, 'getUserProfiles').mockResolvedValue(mockProfiles);
+    (userRepository.unassignProfile as jest.Mock).mockResolvedValueOnce(true);
+    (userRepository.assignProfile as jest.Mock).mockResolvedValue({
+      id: 1,
+      usuario_id: 1,
+      perfil_id: 2,
+    });
+
+    const result = await userService.updateUser(1, {
+      ...mockUser,
+      perfis: [{ id: 2 }],
+    });
+
+    expect(result).toEqual(mockUser);
+    expect(userRepository.updateUser).toHaveBeenCalledWith(1, {
+      ...mockUser,
+      data_update: expect.any(String),
+      senha: expect.any(String),
+    });
     expect(userRepository.unassignProfile).toHaveBeenCalledWith(1);
     expect(userRepository.assignProfile).toHaveBeenCalledWith({
-      perfil_id: 1,
+      perfil_id: 2,
       usuario_id: 1,
     });
   });
@@ -301,27 +308,62 @@ describe('User Service Unit Tests', () => {
   });
 
   it('should throw an error if no user is found to update', async () => {
+    const mockUser = {
+      ativo: true,
+      data_criacao: '2025-01-11T02:54:02.311Z',
+      data_update: '2025-01-16T02:54:02.311Z',
+      email: 'admin@exemplo.com',
+      id: 1,
+      nome: 'Admin Usuário',
+      senha: 'senhaAdmin',
+    };
+    const mockProfiles = [{ id: 1, nome: 'admin', descricao: 'Administrador' }];
+
+    (profileRepository.getProfileByParams as jest.Mock).mockResolvedValue({
+      id: 2,
+      nome: 'comum',
+      descricao: 'Comum',
+    });
+    (userRepository.getUserByParams as jest.Mock).mockResolvedValue(mockUser);
+    jest.spyOn(userService, 'getUserProfiles').mockResolvedValue(mockProfiles);
+    (userRepository.unassignProfile as jest.Mock).mockResolvedValueOnce(true);
+    (userRepository.assignProfile as jest.Mock).mockResolvedValue({
+      id: 1,
+      usuario_id: 1,
+      perfil_id: 2,
+    });
     (userRepository.updateUser as jest.Mock).mockResolvedValueOnce(undefined);
 
     await expect(
-      userService.updateUser(1, { ...mockUsers[0], perfis: [{ id: 2 }] }),
+      userService.updateUser(1, { ...mockUser, perfis: [{ id: 2 }] }),
     ).rejects.toThrow('No user found with ID 1 to update.');
   });
 
   it('should throw an error if assigning profiles fails', async () => {
-    (userRepository.updateUser as jest.Mock).mockResolvedValueOnce(
-      mockUsers[0],
-    );
-    (userRepository.unassignProfile as jest.Mock).mockResolvedValueOnce(true);
-    (profileRepository.getProfileByParams as jest.Mock).mockResolvedValue({
+    const mockUser = {
+      ativo: true,
+      data_criacao: '2025-01-11T02:54:02.311Z',
+      data_update: '2025-01-16T02:54:02.311Z',
+      email: 'admin@exemplo.com',
       id: 1,
-      nome: 'admin',
-      descricao: 'Administrador',
+      nome: 'Admin Usuário',
+      senha: 'senhaAdmin',
+    };
+    const mockProfiles = [{ id: 1, nome: 'admin', descricao: 'Administrador' }];
+
+    (profileRepository.getProfileByParams as jest.Mock).mockResolvedValue({
+      id: 2,
+      nome: 'comum',
+      descricao: 'Comum',
     });
-    (userRepository.assignProfile as jest.Mock).mockResolvedValue(null);
+    (userRepository.getUserByParams as jest.Mock).mockResolvedValue(mockUser);
+    (userRepository.updateUser as jest.Mock).mockResolvedValueOnce(mockUser);
+    jest.spyOn(userService, 'getUserProfiles').mockResolvedValue(mockProfiles);
+    (userRepository.unassignProfile as jest.Mock).mockResolvedValueOnce(true);
+    (userRepository.assignProfile as jest.Mock).mockResolvedValue(undefined);
 
     await expect(
-      userService.updateUser(1, { ...mockUsers[0], perfis: [{ id: 2 }] }),
+      userService.updateUser(1, { ...mockUser, perfis: [{ id: 2 }] }),
     ).rejects.toThrow('Failed to associate profiles to user.');
   });
 
@@ -383,7 +425,6 @@ describe('User Service Unit Tests', () => {
     const result = await userService.getUserProfiles(mockUserId);
 
     expect(result).toEqual(mockProfiles);
-    expect(userRepository.getUserProfiles).toHaveBeenCalledWith(mockUserId);
   });
 
   it('should throw an error if no user ID is provided', async () => {

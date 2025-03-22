@@ -1,4 +1,5 @@
 import { Knex } from 'knex';
+import bcrypt from 'bcrypt';
 
 export const seed = async (knex: Knex): Promise<void> => {
   await knex('usuarios_perfis').del();
@@ -14,13 +15,13 @@ export const seed = async (knex: Knex): Promise<void> => {
     {
       nome: 'Admin Usuário',
       email: 'admin@exemplo.com',
-      senha: 'senhaAdmin',
+      senha: await bcrypt.hash('senhaAdmin', 10),
       ativo: true,
     },
     {
       nome: 'Usuário Comum',
       email: 'usuario@exemplo.com',
-      senha: 'senhaComum',
+      senha: await bcrypt.hash('senhaComum', 10),
       ativo: true,
     },
   ]);

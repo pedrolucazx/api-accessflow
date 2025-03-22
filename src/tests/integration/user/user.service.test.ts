@@ -23,7 +23,7 @@ describe('User Service Integration Tests', () => {
         email: 'admin@exemplo.com',
         id: 1,
         nome: 'Admin Usuário',
-        senha: 'senhaAdmin',
+        senha: expect.any(String),
       },
       {
         ativo: 1,
@@ -32,7 +32,7 @@ describe('User Service Integration Tests', () => {
         email: 'usuario@exemplo.com',
         id: 2,
         nome: 'Usuário Comum',
-        senha: 'senhaComum',
+        senha: expect.any(String),
       },
     ]);
   });
@@ -47,7 +47,7 @@ describe('User Service Integration Tests', () => {
       email: 'admin@exemplo.com',
       data_update: expect.any(String),
       data_criacao: expect.any(String),
-      senha: 'senhaAdmin',
+      senha: expect.any(String),
     });
   });
 

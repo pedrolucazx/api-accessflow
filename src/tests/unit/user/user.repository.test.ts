@@ -1,6 +1,11 @@
-import { userRepository } from '@/repositories/user.repository';
 import { database } from '@/database';
-import { User, UserInput, UserProfileAssignment } from '@/types/users.types';
+import { userRepository } from '@/repositories/user.repository';
+import {
+  User,
+  UserInput,
+  UserProfileAssignment,
+  UserUpdateInput,
+} from '@/types/users.types';
 
 jest.mock('@/database');
 
@@ -125,10 +130,11 @@ describe('User Model Unit Tests', () => {
   });
 
   it('should update a user successfully', async () => {
-    const userInput: UserInput = {
+    const userInput: UserUpdateInput = {
       nome: 'Updated User',
       email: 'anymail@mail.com',
       senha: 'Senha@321',
+      data_update: new Date().toISOString(),
     };
     mockDatabase
       .update()
@@ -141,6 +147,7 @@ describe('User Model Unit Tests', () => {
       nome: 'Updated User',
       email: 'anymail@mail.com',
       senha: 'Senha@321',
+      data_update: expect.any(String),
     });
     expect(mockDatabase.update).toHaveBeenCalledWith(userInput);
     expect(mockDatabase.update().returning).toHaveBeenCalledWith('*');
@@ -219,6 +226,7 @@ describe('User Model Unit Tests', () => {
         nome: 'Updated User',
         email: '',
         senha: '',
+        data_update: new Date().toISOString(),
       }),
     ).rejects.toThrow('Database error');
   });

@@ -15,9 +15,9 @@
     "knex:migrate": "npx knex migrate:latest",
     "start:dev": "ts-node-dev --respawn src/index.ts",
     "knex:rollback": "npx knex migrate:rollback --all",
-    "knex:reset": "yarn knex:rollback && yarn knex:migrate && yarn knex:seed",
     "docker:dev": "docker compose -f docker-compose.yml up database -d",
-    "test": "jest --verbose --runInBand --detectOpenHandles --forceExit"
+    "test": "jest --verbose --runInBand --detectOpenHandles --forceExit",
+    "knex:reset": "yarn knex:rollback && yarn knex:migrate && yarn knex:seed"
   },
   "keywords": [],
   "author": "",

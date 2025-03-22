@@ -1,17 +1,16 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-import { resolvers, typeDefs } from './graphql/index';
 import { ListenOptions } from 'net';
-import { Knex } from 'knex';
+import { resolvers, typeDefs } from './graphql/index';
+import { Context, createContext } from './graphql/context';
 
 interface ServerStart {
-  server: ApolloServer;
+  server: ApolloServer<Context>;
   url: string;
 }
-const port = Number(process.env.PORT);
+
 async function startApolloServer(
-  database: Knex,
-  listenOptions: ListenOptions = { port },
+  listenOptions: ListenOptions = { port: Number(process.env.PORT) },
 ): Promise<ServerStart> {
   const server = new ApolloServer({
     typeDefs,
@@ -20,7 +19,7 @@ async function startApolloServer(
 
   const { url } = await startStandaloneServer(server, {
     listen: listenOptions,
-    context: async () => ({ database }),
+    context: async ({ req }) => createContext({ req }),
   });
 
   return { server, url };
