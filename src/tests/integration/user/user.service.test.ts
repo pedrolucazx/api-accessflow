@@ -1,6 +1,11 @@
 import { database } from '@/database';
 import { userService } from '@/service/user.service';
-import { SignUpInput, User, UserInput } from '@/types/users.types';
+import {
+  SignUpInput,
+  User,
+  UserInput,
+  UserUpdateInput,
+} from '@/types/users.types';
 
 describe('User Service Integration Tests', () => {
   let latestUser: Pick<User, 'id'> | undefined;
@@ -72,10 +77,11 @@ describe('User Service Integration Tests', () => {
 
   it('should update an existing user with the provided updates', async () => {
     const id = latestUser?.id;
-    const updates: UserInput = {
+    const updates: UserUpdateInput = {
       nome: 'update user',
       email: 'update@mail.com',
       senha: 'Password@321',
+      data_update: new Date().toISOString(),
     };
     const updatedProfile = await userService.updateUser(id!, updates);
 

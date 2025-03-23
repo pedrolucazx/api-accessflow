@@ -1,6 +1,14 @@
 import { Profile } from '@/types/profiles.types';
 import { userService } from '../../service/user.service';
-import { argsType, AuthenticatedUser, User } from '../../types/users.types';
+import {
+  argsType,
+  AuthenticatedUser,
+  LoginInput,
+  SignUpInput,
+  User,
+  UserInput,
+  UserUpdateInput,
+} from '../../types/users.types';
 import { Context } from '../context';
 
 const resolvers = {
@@ -28,7 +36,7 @@ const resolvers = {
     },
     login: async (
       _obj: unknown,
-      args: argsType,
+      args: { input: LoginInput },
     ): Promise<AuthenticatedUser | undefined> => {
       return await userService.login(args?.input);
     },
@@ -36,7 +44,7 @@ const resolvers = {
   Mutation: {
     createUser: async (
       _obj: unknown,
-      args: argsType,
+      args: { input: UserInput },
       context: Context,
     ): Promise<User | undefined> => {
       context.validateAdmin();
@@ -44,7 +52,7 @@ const resolvers = {
     },
     updateUser: async (
       _obj: unknown,
-      args: argsType,
+      args: { input: UserUpdateInput; id: number },
       context: Context,
     ): Promise<User | undefined> => {
       context.validateUserAccess(args?.id);
@@ -60,7 +68,7 @@ const resolvers = {
     },
     signUp: async (
       _obj: unknown,
-      args: argsType,
+      args: { input: SignUpInput },
     ): Promise<User | undefined> => {
       return await userService.signUp(args?.input);
     },

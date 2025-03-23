@@ -77,6 +77,6 @@ export interface UserRepository {
 
 export type argsType = {
   id: number;
-  input: UserInput;
+  input: UserInput | UserUpdateInput;
   filter: UserFilter;
 };

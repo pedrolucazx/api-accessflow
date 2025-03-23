@@ -9,6 +9,7 @@ import {
   User,
   UserFilter,
   UserInput,
+  UserUpdateInput,
 } from '../types/users.types';
 import { handleError } from '../utils/handleError';
 import jwt from 'jsonwebtoken';
@@ -90,7 +91,7 @@ export const userService = {
 
   updateUser: async (
     id: number,
-    data: UserInput,
+    data: UserUpdateInput,
   ): Promise<User | undefined> => {
     try {
       const { perfis, ...user } = data;

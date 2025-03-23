@@ -5,7 +5,7 @@ import request from 'supertest';
 
 jest.setTimeout(50000);
 
-describe.skip('User End-to-End Tests', () => {
+describe('User End-to-End Tests', () => {
   const GET_ALL_USERS = `#graphql
     query {
       getAllUsers {
@@ -17,7 +17,7 @@ describe.skip('User End-to-End Tests', () => {
         data_update
         perfis {
           id
-          # nome
+          nome
           descricao
         }
       }
@@ -61,7 +61,7 @@ describe.skip('User End-to-End Tests', () => {
   `;
 
   const UPDATE_USER = `#graphql
-    mutation UpdateUser($input: UserInput!, $updateUserId: Int!) {
+    mutation UpdateUser($input: UserUpdateInput!, $updateUserId: Int!) {
       updateUser(input: $input, id: $updateUserId) {
         id
         nome
@@ -83,6 +83,7 @@ describe.skip('User End-to-End Tests', () => {
       deleteUser(id: $deleteUserId)
     }
   `;
+
   const SIGNUP = `#graphql
     mutation SignUp($input: SignUpInput) {
       signUp(input: $input) {
@@ -101,8 +102,27 @@ describe.skip('User End-to-End Tests', () => {
     }
   `;
 
+  const LOGIN = `#graphql
+    query Login($input: LoginInput) {
+      login(input: $input) {
+        id
+        nome
+        email
+        ativo
+        token
+        perfis {
+          id
+          nome
+          descricao
+        }
+      }
+    }
+  `;
+
   let apolloServer: ApolloServer<Context>;
   let urlServer: string;
+  let adminToken: string;
+  let authToken: string;
 
   beforeAll(async () => {
     const { server, url } = await startApolloServer({ port: 4001 });
@@ -114,10 +134,74 @@ describe.skip('User End-to-End Tests', () => {
     await apolloServer?.stop();
   });
 
+  it('should login admin user successfully', async () => {
+    const response = await request(urlServer)
+      .post('/')
+      .send({
+        query: LOGIN,
+        variables: {
+          input: {
+            email: 'admin@exemplo.com',
+            senha: 'senhaAdmin',
+          },
+        },
+      });
+
+    expect(response.body.data.login).toEqual({
+      ativo: true,
+      email: 'admin@exemplo.com',
+      id: 1,
+      nome: 'Admin Usuário',
+      perfis: [
+        {
+          descricao: 'Administrador',
+          id: 1,
+          nome: 'admin',
+        },
+      ],
+      token: expect.any(String),
+    });
+    expect(response.status).toBe(200);
+    adminToken = response.body.data.login.token;
+  });
+
+  it('should login common user successfully', async () => {
+    const response = await request(urlServer)
+      .post('/')
+      .send({
+        query: LOGIN,
+        variables: {
+          input: {
+            email: 'usuario@exemplo.com',
+            senha: 'senhaComum',
+          },
+        },
+      });
+
+    expect(response.body.data.login).toEqual({
+      ativo: true,
+      email: 'usuario@exemplo.com',
+      nome: 'Usuário Comum',
+      id: 2,
+      perfis: [
+        {
+          descricao: 'Comum',
+          id: 2,
+          nome: 'comum',
+        },
+      ],
+      token: expect.any(String),
+    });
+
+    expect(response.status).toBe(200);
+    authToken = response.body.data.login.token;
+  });
+
   it('should fetch all users successfully', async () => {
     const response = await request(urlServer)
       .post('/')
-      .send({ query: GET_ALL_USERS });
+      .send({ query: GET_ALL_USERS })
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(response.body.data.getAllUsers).toEqual([
       {
@@ -159,7 +243,8 @@ describe.skip('User End-to-End Tests', () => {
 
     const response = await request(urlServer)
       .post('/')
-      .send({ query: GET_USER_BY_PARAMS, variables: { filter } });
+      .send({ query: GET_USER_BY_PARAMS, variables: { filter } })
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(response.body.data.getUserByParams).toEqual({
       ativo: true,
@@ -196,7 +281,8 @@ describe.skip('User End-to-End Tests', () => {
             ],
           },
         },
-      });
+      })
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(response.body.data.createUser).toEqual({
       ativo: true,
@@ -223,49 +309,44 @@ describe.skip('User End-to-End Tests', () => {
         query: UPDATE_USER,
         variables: {
           input: {
-            nome: 'updated user',
-            email: 'updated@mail.com',
-            senha: 'Password@321',
-            perfis: [
-              {
-                id: 2,
-              },
-            ],
+            nome: 'Admin',
           },
           updateUserId: 1,
         },
-      });
+      })
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(response.body.data.updateUser).toEqual({
       ativo: true,
       data_criacao: expect.any(String),
       data_update: expect.any(String),
-      email: 'updated@mail.com',
+      email: 'admin@exemplo.com',
       id: 1,
-      nome: 'updated user',
+      nome: 'Admin',
       perfis: [
         {
-          descricao: 'Comum',
-          id: 2,
-          nome: 'comum',
+          descricao: 'Administrador',
+          id: 1,
+          nome: 'admin',
         },
       ],
     });
     expect(response.status).toBe(200);
   });
 
-  it('should delete a profile successfully', async () => {
+  it('should delete a user successfully', async () => {
     const response = await request(urlServer)
       .post('/')
       .send({
         query: DELETE_USER,
         variables: {
-          deleteUserId: 1,
+          deleteUserId: 2,
         },
-      });
+      })
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(response.body.data.deleteUser).toBe(
-      'User with ID 1 was successfully deleted.',
+      'User with ID 2 was successfully deleted.',
     );
     expect(response.status).toBe(200);
   });
@@ -299,6 +380,32 @@ describe.skip('User End-to-End Tests', () => {
         },
       ],
     });
+    expect(response.status).toBe(200);
+  });
+
+  it('should fetchs a user by filter parameters and throw an error if is common user', async () => {
+    const filter = { id: 100 };
+
+    const response = await request(urlServer)
+      .post('/')
+      .send({ query: GET_USER_BY_PARAMS, variables: { filter } })
+      .set('Authorization', `Bearer ${authToken}`);
+
+    expect(response.body.errors[0].message).toEqual(
+      'Acesso negado: você não tem permissão para acessar esses dados.',
+    );
+    expect(response.status).toBe(200);
+  });
+
+  it('should throw an error if unauthenticated user', async () => {
+    const filter = { id: 1 };
+
+    const response = await request(urlServer)
+      .post('/')
+      .send({ query: GET_USER_BY_PARAMS, variables: { filter } })
+      .set('Authorization', `Bearer `);
+
+    expect(response.body.errors[0].message).toEqual('Usuário não autenticado.');
     expect(response.status).toBe(200);
   });
 });

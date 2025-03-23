@@ -5,7 +5,7 @@ import request from 'supertest';
 
 jest.setTimeout(50000);
 
-describe.skip('Profile End-to-End Tests', () => {
+describe('Profile End-to-End Tests', () => {
   const GET_ALL_PROFILES = `#graphql
   query {
     getAllProfiles {
@@ -52,10 +52,18 @@ describe.skip('Profile End-to-End Tests', () => {
   }
 `;
 
-  let apolloServer: ApolloServer<Context>;
+  const LOGIN = `#graphql
+    query Login($input: LoginInput) {
+      login(input: $input) {
+        token
+      }
+    }
+  `;
+
   let urlServer: string;
-  const adminToken =
-    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibm9tZSI6IkFkbWluIFVzdcOhcmlvIiwiZW1haWwiOiJhZG1pbkBleGVtcGxvLmNvbSIsImF0aXZvIjp0cnVlLCJwZXJmaXMiOlt7ImlkIjoxLCJub21lIjoiYWRtaW4iLCJkZXNjcmljYW8iOiJBZG1pbmlzdHJhZG9yIn1dLCJpYXQiOjE3NDEwMTEwODQsImV4cCI6MTc0MTA5NzQ4NH0.RBUCXUXxqJ0SfJqaAs7ARAuWTqY2BGAUpYlkEDNZt-o';
+  let adminToken: string;
+  let authToken: string;
+  let apolloServer: ApolloServer<Context>;
 
   beforeAll(async () => {
     const { server, url } = await startApolloServer({ port: 4001 });
@@ -67,9 +75,44 @@ describe.skip('Profile End-to-End Tests', () => {
     await apolloServer?.stop();
   });
 
+  it('should login admin user successfully', async () => {
+    const response = await request(urlServer)
+      .post('/')
+      .send({
+        query: LOGIN,
+        variables: {
+          input: {
+            email: 'admin@exemplo.com',
+            senha: 'senhaAdmin',
+          },
+        },
+      });
+
+    expect(response.status).toBe(200);
+    adminToken = response.body.data.login.token;
+  });
+
+  it('should login common user successfully', async () => {
+    const response = await request(urlServer)
+      .post('/')
+      .send({
+        query: LOGIN,
+        variables: {
+          input: {
+            email: 'usuario@exemplo.com',
+            senha: 'senhaComum',
+          },
+        },
+      });
+
+    expect(response.status).toBe(200);
+    authToken = response.body.data.login.token;
+  });
+
   it('should fetch all profiles successfully', async () => {
     const response = await request(urlServer)
       .post('/')
+      .send({ query: GET_ALL_PROFILES })
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ query: GET_ALL_PROFILES });
 
@@ -85,7 +128,8 @@ describe.skip('Profile End-to-End Tests', () => {
 
     const response = await request(urlServer)
       .post('/')
-      .send({ query: GET_PROFILE_BY_PARAMS, variables: { filter } });
+      .send({ query: GET_PROFILE_BY_PARAMS, variables: { filter } })
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(response.body.data.getProfileByParams).toEqual({
       id: 1,
@@ -101,7 +145,8 @@ describe.skip('Profile End-to-End Tests', () => {
       .send({
         query: CREATE_PROFILE,
         variables: { input: { nome: 'gestor', descricao: 'Gestor de equipe' } },
-      });
+      })
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(response.body.data.createProfile).toEqual({
       id: expect.any(Number),
@@ -119,7 +164,8 @@ describe.skip('Profile End-to-End Tests', () => {
 
     const response = await request(urlServer)
       .post('/')
-      .send({ query: UPDATE_PROFILE, variables: { id: 1, input: updateData } });
+      .send({ query: UPDATE_PROFILE, variables: { id: 1, input: updateData } })
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(response.body.data.updateProfile).toEqual({
       id: 1,
@@ -132,10 +178,24 @@ describe.skip('Profile End-to-End Tests', () => {
   it('should delete a profile successfully', async () => {
     const response = await request(urlServer)
       .post('/')
-      .send({ query: DELETE_PROFILE, variables: { id: 2 } });
+      .send({ query: DELETE_PROFILE, variables: { id: 2 } })
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(response.body.data.deleteProfile).toBe(
       'Profile with ID 2 was successfully deleted.',
+    );
+    expect(response.status).toBe(200);
+  });
+
+  it('should fetch all profiles and throw an error if no admin user', async () => {
+    const response = await request(urlServer)
+      .post('/')
+      .send({ query: GET_ALL_PROFILES })
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ query: GET_ALL_PROFILES });
+
+    expect(response.body.errors[0].message).toEqual(
+      'Acesso negado: apenas administradores podem realizar essa ação.',
     );
     expect(response.status).toBe(200);
   });

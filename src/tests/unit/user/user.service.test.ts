@@ -1,10 +1,12 @@
 import { userService } from '@/service/user.service';
 import { userRepository } from '@/repositories/user.repository';
-import { User } from '@/types/users.types';
+import { User, UserUpdateInput } from '@/types/users.types';
 import { profileRepository } from '@/repositories/profile.repository';
+import jwt from 'jsonwebtoken';
 
 jest.mock('@/repositories/user.repository');
 jest.mock('@/repositories/profile.repository');
+jest.mock('jsonwebtoken');
 
 describe('User Service Unit Tests', () => {
   beforeEach(() => {
@@ -293,9 +295,9 @@ describe('User Service Unit Tests', () => {
   });
 
   it('should throw an error if ID or user data is invalid', async () => {
-    await expect(userService.updateUser(1, {} as User)).rejects.toThrow(
-      'Invalid user data or ID.',
-    );
+    await expect(
+      userService.updateUser(1, {} as UserUpdateInput),
+    ).rejects.toThrow('Invalid user data or ID.');
   });
 
   it('should throw an error if a profile is not found', async () => {
@@ -303,7 +305,10 @@ describe('User Service Unit Tests', () => {
       null,
     );
     await expect(
-      userService.updateUser(1, { ...mockUsers[0], perfis: [{ id: 99 }] }),
+      userService.updateUser(1, {
+        perfis: [{ id: 99 }],
+        data_update: new Date().toISOString(),
+      }),
     ).rejects.toThrow('Profile not found.');
   });
 
@@ -373,7 +378,10 @@ describe('User Service Unit Tests', () => {
     );
 
     await expect(
-      userService.updateUser(1, { ...mockUsers[0], perfis: [{ id: 2 }] }),
+      userService.updateUser(1, {
+        perfis: [{ id: 2 }],
+        data_update: new Date().toISOString(),
+      }),
     ).rejects.toThrow('Error updating user with ID 1: Database error');
   });
 
@@ -487,5 +495,162 @@ describe('User Service Unit Tests', () => {
       ...userInput,
       perfis: [{ nome: 'comum', descricao: 'Comum' }],
     });
+  });
+
+  it('should return authenticated user with token on success', async () => {
+    const mockUser = {
+      ativo: true,
+      data_criacao: '2025-01-11T02:54:02.311Z',
+      data_update: '2025-01-16T02:54:02.311Z',
+      email: 'admin@exemplo.com',
+      id: 1,
+      nome: 'Admin Usuário',
+      senha: 'senhaAdmin',
+    };
+    const mockProfiles = [{ id: 1, nome: 'admin', descricao: 'Administrador' }];
+    jest.spyOn(userService, 'getUserProfiles').mockResolvedValue(mockProfiles);
+    (jwt.sign as jest.Mock).mockReturnValue('mockedToken');
+
+    const result = await userService.getAuthenticatedUser(mockUser);
+
+    expect(result).toEqual({
+      ativo: true,
+      email: 'admin@exemplo.com',
+      iat: expect.any(Number),
+      exp: expect.any(Number),
+      id: 1,
+      nome: 'Admin Usuário',
+      perfis: [
+        {
+          descricao: 'Administrador',
+          id: 1,
+          nome: 'admin',
+        },
+      ],
+      token: 'mockedToken',
+    });
+    expect(userService.getUserProfiles).toHaveBeenCalledWith(mockUser.id);
+    expect(jwt.sign).toHaveBeenCalledWith(
+      expect.any(Object),
+      process.env.JWT_SECRET,
+    );
+  });
+
+  it('should handle errors gracefully', async () => {
+    const mockUser = {
+      ativo: true,
+      data_criacao: '2025-01-11T02:54:02.311Z',
+      data_update: '2025-01-16T02:54:02.311Z',
+      email: 'admin@exemplo.com',
+      id: 1,
+      nome: 'Admin Usuário',
+      senha: 'senhaAdmin',
+    };
+    jest
+      .spyOn(userService, 'getUserProfiles')
+      .mockRejectedValue(new Error('Database error'));
+
+    await expect(userService.getAuthenticatedUser(mockUser)).rejects.toThrow(
+      'Error authenticating user: Database error',
+    );
+  });
+
+  it('should return authenticated user on successful login', async () => {
+    const mockUser = {
+      ativo: true,
+      data_criacao: '2025-01-11T02:54:02.311Z',
+      data_update: '2025-01-16T02:54:02.311Z',
+      email: 'admin@exemplo.com',
+      id: 1,
+      nome: 'Admin Usuário',
+      senha: '$2b$10$Gsklrg7fGdpSFok54jEa7ugDTpcONcbnvLFhu4A6zTLarvynKvmCq',
+    };
+    jest.spyOn(userService, 'getUserByParams').mockResolvedValue(mockUser);
+    jest.spyOn(userService, 'getAuthenticatedUser').mockResolvedValue({
+      id: 1,
+      nome: 'Admin Usuário',
+      email: 'admin@exemplo.com',
+      ativo: true,
+      perfis: [
+        {
+          id: 1,
+          nome: 'admin',
+          descricao: 'Administrador',
+        },
+      ],
+      iat: 1742694551,
+      exp: 1742780951,
+      token: 'mockedToken',
+    });
+
+    const result = await userService.login({
+      email: 'admin@exemplo.com',
+      senha: 'senhaAdmin',
+    });
+
+    expect(result).toEqual({
+      ativo: true,
+      email: 'admin@exemplo.com',
+      exp: 1742780951,
+      iat: 1742694551,
+      id: 1,
+      nome: 'Admin Usuário',
+      perfis: [
+        {
+          descricao: 'Administrador',
+          id: 1,
+          nome: 'admin',
+        },
+      ],
+      token: 'mockedToken',
+    });
+  });
+
+  it('should throw an error if email is missing', async () => {
+    await expect(
+      userService.login({ email: '', senha: 'password' }),
+    ).rejects.toThrow('Email is required');
+  });
+
+  it('should throw an error if password is invalid', async () => {
+    const mockUser = {
+      ativo: true,
+      data_criacao: '2025-01-11T02:54:02.311Z',
+      data_update: '2025-01-16T02:54:02.311Z',
+      email: 'admin@exemplo.com',
+      id: 1,
+      nome: 'Admin Usuário',
+      senha: '$2b$10$Gsklrg7fGdpSFok54jEa7ugDTpcONcbnvLFhu4A6zTLarvynKvmCq',
+    };
+    jest.spyOn(userService, 'getUserByParams').mockResolvedValue(mockUser);
+    jest.spyOn(userService, 'getAuthenticatedUser').mockResolvedValue({
+      id: 1,
+      nome: 'Admin Usuário',
+      email: 'admin@exemplo.com',
+      ativo: true,
+      perfis: [
+        {
+          id: 1,
+          nome: 'admin',
+          descricao: 'Administrador',
+        },
+      ],
+      iat: 1742694551,
+      exp: 1742780951,
+      token: 'mockedToken',
+    });
+    await expect(
+      userService.login({ email: mockUser.email, senha: 'wrongPassword' }),
+    ).rejects.toThrow('Invalid password');
+  });
+
+  it('should handle unexpected errors gracefully', async () => {
+    jest
+      .spyOn(userService, 'getUserByParams')
+      .mockRejectedValue(new Error('Database error'));
+
+    await expect(
+      userService.login({ email: 'admin@exemplo.com', senha: 'senhaAdmin' }),
+    ).rejects.toThrow('Error authenticating user: Database error');
   });
 });
