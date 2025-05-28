@@ -101,7 +101,7 @@ describe('User Service Unit Tests', () => {
 
     await expect(
       userService.getUserByParams({ nome: 'Non-existent' }),
-    ).rejects.toThrow('User not found.');
+    ).rejects.toThrow('Usuário não encontrado.');
   });
 
   it('should throw an error database during fetch by parameters', async () => {
@@ -551,7 +551,7 @@ describe('User Service Unit Tests', () => {
       .mockRejectedValue(new Error('Database error'));
 
     await expect(userService.getAuthenticatedUser(mockUser)).rejects.toThrow(
-      'Error authenticating user: Database error',
+      'Erro ao autenticar o usuário: Database error',
     );
   });
 
@@ -609,7 +609,7 @@ describe('User Service Unit Tests', () => {
   it('should throw an error if email is missing', async () => {
     await expect(
       userService.login({ email: '', senha: 'password' }),
-    ).rejects.toThrow('Email is required');
+    ).rejects.toThrow(/^Email is required$/);
   });
 
   it('should throw an error if password is invalid', async () => {
@@ -641,7 +641,7 @@ describe('User Service Unit Tests', () => {
     });
     await expect(
       userService.login({ email: mockUser.email, senha: 'wrongPassword' }),
-    ).rejects.toThrow('Invalid password');
+    ).rejects.toThrow('Senha inválida.');
   });
 
   it('should handle unexpected errors gracefully', async () => {
@@ -651,6 +651,6 @@ describe('User Service Unit Tests', () => {
 
     await expect(
       userService.login({ email: 'admin@exemplo.com', senha: 'senhaAdmin' }),
-    ).rejects.toThrow('Error authenticating user: Database error');
+    ).rejects.toThrow('Erro ao autenticar o usuário: Database error');
   });
 });

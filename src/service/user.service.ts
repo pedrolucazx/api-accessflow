@@ -11,7 +11,7 @@ import {
   UserInput,
   UserUpdateInput,
 } from '../types/users.types';
-import { handleError } from '../utils/handleError';
+import { CustomError, handleError } from '../utils/handleError';
 import jwt from 'jsonwebtoken';
 
 export const userService = {
@@ -30,12 +30,12 @@ export const userService = {
   getUserByParams: async (filter: UserFilter): Promise<User | undefined> => {
     try {
       if (!Object.keys(filter).length) {
-        throw new Error('At least one parameter must be provided.');
+        throw new CustomError('At least one parameter must be provided.');
       }
 
       const user = await userRepository.getUserByParams(filter);
       if (!user) {
-        throw new Error('User not found.');
+        throw new CustomError('Usuário não encontrado.');
       }
 
       return user;
@@ -223,7 +223,7 @@ export const userService = {
         perfis: profiles,
       };
     } catch (error) {
-      handleError('Error authenticating user:', error);
+      handleError('Erro ao autenticar o usuário:', error);
     }
   },
 
@@ -232,16 +232,16 @@ export const userService = {
     senha,
   }: LoginInput): Promise<AuthenticatedUser | undefined> => {
     try {
-      if (!email) throw new Error('Email is required');
+      if (!email) throw new CustomError('Email is required');
 
       const user = await userService.getUserByParams({ email });
 
       const isPasswordValid = await bcrypt.compare(senha, user!.senha);
-      if (!isPasswordValid) throw new Error('Invalid password');
+      if (!isPasswordValid) throw new CustomError('Senha inválida.');
 
       return await userService.getAuthenticatedUser(user!);
     } catch (error) {
-      handleError('Error authenticating user:', error);
+      handleError('Erro ao autenticar o usuário:', error);
     }
   },
 };
