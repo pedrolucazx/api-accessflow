@@ -64,7 +64,9 @@ describe('User Service Unit Tests', () => {
   it('should throw an error no users found during fetch', async () => {
     (userRepository.getAllUsers as jest.Mock).mockResolvedValue([]);
 
-    await expect(userService.getAllUsers()).rejects.toThrow('No users found');
+    await expect(userService.getAllUsers()).rejects.toThrow(
+      'Nenhum usuário encontrado.',
+    );
   });
 
   it('should throw an error database during fetch of all users', async () => {
@@ -92,7 +94,7 @@ describe('User Service Unit Tests', () => {
 
   it('should throw an error invalid parameters for fetching a user', async () => {
     await expect(userService.getUserByParams({})).rejects.toThrow(
-      'At least one parameter must be provided.',
+      'Pelo menos um parâmetro deve ser fornecido.',
     );
   });
 
@@ -160,7 +162,7 @@ describe('User Service Unit Tests', () => {
 
   it('should throw an error incomplete user data during creation', async () => {
     await expect(userService.createUser({} as User)).rejects.toThrow(
-      'User data is incomplete or invalid.',
+      'Os dados do usuário estão incompletos ou inválidos.',
     );
   });
 
@@ -177,7 +179,7 @@ describe('User Service Unit Tests', () => {
     );
 
     await expect(userService.createUser(userData)).rejects.toThrow(
-      'Profile not found.',
+      'Perfil não encontrado.',
     );
   });
 
@@ -198,7 +200,7 @@ describe('User Service Unit Tests', () => {
     (userRepository.createUser as jest.Mock).mockResolvedValue(undefined);
 
     await expect(userService.createUser(userData)).rejects.toThrow(
-      'Failed to create user.',
+      'Falha ao criar o usuário.',
     );
   });
 
@@ -229,7 +231,7 @@ describe('User Service Unit Tests', () => {
     (userRepository.assignProfile as jest.Mock).mockResolvedValue(false);
 
     await expect(userService.createUser(userData)).rejects.toThrow(
-      'Failed to associate profiles to user.',
+      'Falha ao associar perfis ao usuário.',
     );
   });
 
@@ -297,7 +299,7 @@ describe('User Service Unit Tests', () => {
   it('should throw an error if ID or user data is invalid', async () => {
     await expect(
       userService.updateUser(1, {} as UserUpdateInput),
-    ).rejects.toThrow('Invalid user data or ID.');
+    ).rejects.toThrow('Dados do usuário ou ID inválidos.');
   });
 
   it('should throw an error if a profile is not found', async () => {
@@ -309,7 +311,7 @@ describe('User Service Unit Tests', () => {
         perfis: [{ id: 99 }],
         data_update: new Date().toISOString(),
       }),
-    ).rejects.toThrow('Profile not found.');
+    ).rejects.toThrow('Perfil não encontrado.');
   });
 
   it('should throw an error if no user is found to update', async () => {
@@ -341,7 +343,7 @@ describe('User Service Unit Tests', () => {
 
     await expect(
       userService.updateUser(1, { ...mockUser, perfis: [{ id: 2 }] }),
-    ).rejects.toThrow('No user found with ID 1 to update.');
+    ).rejects.toThrow('Nenhum usuário encontrado com o ID 1 para atualizar.');
   });
 
   it('should throw an error if assigning profiles fails', async () => {
@@ -369,7 +371,7 @@ describe('User Service Unit Tests', () => {
 
     await expect(
       userService.updateUser(1, { ...mockUser, perfis: [{ id: 2 }] }),
-    ).rejects.toThrow('Failed to associate profiles to user.');
+    ).rejects.toThrow('Falha ao associar perfis ao usuário.');
   });
 
   it('should throw an error database during user update', async () => {
@@ -382,7 +384,7 @@ describe('User Service Unit Tests', () => {
         perfis: [{ id: 2 }],
         data_update: new Date().toISOString(),
       }),
-    ).rejects.toThrow('Error updating user with ID 1: Database error');
+    ).rejects.toThrow('Erro ao atualizar usuário com ID 1: Database error');
   });
 
   it('should delete a user successfully', async () => {
@@ -394,13 +396,13 @@ describe('User Service Unit Tests', () => {
 
     const result = await userService.deleteUser(mockId);
 
-    expect(result).toBe(`User with ID ${mockId} was successfully deleted.`);
+    expect(result).toBe(`Usuário com ID ${mockId} foi deletado com sucesso.`);
     expect(userRepository.deleteUser).toHaveBeenCalledWith(mockId);
   });
 
   it('should throw an error if no ID is provided', async () => {
     await expect(userService.deleteUser(0)).rejects.toThrow(
-      'User ID is required.',
+      'É necessário fornecer o ID do usuário.',
     );
   });
 
@@ -409,7 +411,7 @@ describe('User Service Unit Tests', () => {
     (userRepository.deleteUser as jest.Mock).mockResolvedValueOnce(undefined);
 
     await expect(userService.deleteUser(mockId)).rejects.toThrow(
-      `No user found with ID ${mockId} to delete.`,
+      `Nenhum usuário encontrado com o ID ${mockId} para deletar.`,
     );
   });
 
@@ -419,7 +421,7 @@ describe('User Service Unit Tests', () => {
     );
 
     await expect(userService.deleteUser(1)).rejects.toThrow(
-      'Error deleting user with ID 1: Database error',
+      'Erro ao deletar o usuário com ID 1: Database error',
     );
   });
 
@@ -437,7 +439,7 @@ describe('User Service Unit Tests', () => {
 
   it('should throw an error if no user ID is provided', async () => {
     await expect(userService.getUserProfiles(0)).rejects.toThrow(
-      'User ID is required.',
+      'É necessário fornecer o ID do usuário.',
     );
   });
 
@@ -609,7 +611,7 @@ describe('User Service Unit Tests', () => {
   it('should throw an error if email is missing', async () => {
     await expect(
       userService.login({ email: '', senha: 'password' }),
-    ).rejects.toThrow(/^Email is required$/);
+    ).rejects.toThrow(/^O e-mail é obrigatório.$/);
   });
 
   it('should throw an error if password is invalid', async () => {

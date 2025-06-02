@@ -346,7 +346,7 @@ describe('User End-to-End Tests', () => {
       .set('Authorization', `Bearer ${adminToken}`);
 
     expect(response.body.data.deleteUser).toBe(
-      'User with ID 2 was successfully deleted.',
+      'Usuário com ID 2 foi deletado com sucesso.',
     );
     expect(response.status).toBe(200);
   });

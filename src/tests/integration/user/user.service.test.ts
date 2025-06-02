@@ -101,7 +101,7 @@ describe('User Service Integration Tests', () => {
     const deletedProfile = await userService.deleteUser(id!);
 
     expect(deletedProfile).toEqual(
-      `User with ID ${id} was successfully deleted.`,
+      `Usuário com ID ${id} foi deletado com sucesso.`,
     );
   });
 

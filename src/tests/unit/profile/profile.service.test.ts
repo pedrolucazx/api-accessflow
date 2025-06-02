@@ -116,7 +116,7 @@ describe('Profile Service Unit Tests', () => {
 
     await expect(
       profileService.getProfileByParams({ nome: 'Non-existent' }),
-    ).rejects.toThrow('Profile not found.');
+    ).rejects.toThrow('Perfil não encontrado.');
   });
 
   it('should throw an error database during fetch by parameters', async () => {

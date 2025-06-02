@@ -19,7 +19,7 @@ export const userService = {
     try {
       const users = await userRepository.getAllUsers();
       if (!users?.length) {
-        throw new Error('No users found');
+        throw new CustomError('Nenhum usuário encontrado.');
       }
       return users;
     } catch (error) {
@@ -30,7 +30,7 @@ export const userService = {
   getUserByParams: async (filter: UserFilter): Promise<User | undefined> => {
     try {
       if (!Object.keys(filter).length) {
-        throw new CustomError('At least one parameter must be provided.');
+        throw new CustomError('Pelo menos um parâmetro deve ser fornecido.');
       }
 
       const user = await userRepository.getUserByParams(filter);
@@ -52,7 +52,9 @@ export const userService = {
         !Object.keys(user).length ||
         Object.values(user).some((value) => !value)
       ) {
-        throw new Error('User data is incomplete or invalid.');
+        throw new CustomError(
+          'Os dados do usuário estão incompletos ou inválidos.',
+        );
       }
 
       const hashedPassword = await bcrypt.hash(user?.senha, 10);
@@ -60,7 +62,7 @@ export const userService = {
         for (const perfil of perfis) {
           const profile = await profileRepository.getProfileByParams(perfil);
           profilesIDs.push(profile?.id);
-          if (!profile) throw new Error('Profile not found.');
+          if (!profile) throw new CustomError('Perfil não encontrado.');
         }
       }
 
@@ -68,7 +70,7 @@ export const userService = {
         ...user,
         senha: hashedPassword,
       });
-      if (!createdUser) throw new Error('Failed to create user.');
+      if (!createdUser) throw new CustomError('Falha ao criar o usuário.');
 
       if (perfis?.length) {
         for (const id of profilesIDs) {
@@ -78,7 +80,7 @@ export const userService = {
           });
 
           if (!assignedProfile) {
-            throw new Error('Failed to associate profiles to user.');
+            throw new CustomError('Falha ao associar perfis ao usuário.');
           }
         }
       }
@@ -97,14 +99,14 @@ export const userService = {
       const { perfis, ...user } = data;
       const profilesIDs = [];
       if (!id || !user || !Object.keys(user).length) {
-        throw new Error('Invalid user data or ID.');
+        throw new CustomError('Dados do usuário ou ID inválidos.');
       }
 
       if (perfis?.length) {
         for (const perfil of perfis) {
           const profile = await profileRepository.getProfileByParams(perfil);
           profilesIDs.push(profile?.id);
-          if (!profile) throw new Error('Profile not found.');
+          if (!profile) throw new CustomError('Perfil não encontrado.');
         }
       }
 
@@ -121,7 +123,9 @@ export const userService = {
       });
 
       if (!updatedUser) {
-        throw new Error(`No user found with ID ${id} to update.`);
+        throw new CustomError(
+          `Nenhum usuário encontrado com o ID ${id} para atualizar.`,
+        );
       }
 
       const existingProfiles = await userService.getUserProfiles(
@@ -140,38 +144,40 @@ export const userService = {
           });
 
           if (!assignedProfile) {
-            throw new Error('Failed to associate profiles to user.');
+            throw new CustomError('Falha ao associar perfis ao usuário.');
           }
         }
       }
 
       return updatedUser;
     } catch (error) {
-      handleError(`Error updating user with ID ${id}:`, error);
+      handleError(`Erro ao atualizar usuário com ID ${id}:`, error);
     }
   },
 
   deleteUser: async (id: number): Promise<string | undefined> => {
     try {
       if (!id) {
-        throw new Error('User ID is required.');
+        throw new CustomError('É necessário fornecer o ID do usuário.');
       }
 
       const deletedRows = await userRepository.deleteUser(id);
       if (!deletedRows) {
-        throw new Error(`No user found with ID ${id} to delete.`);
+        throw new CustomError(
+          `Nenhum usuário encontrado com o ID ${id} para deletar.`,
+        );
       }
 
-      return `User with ID ${id} was successfully deleted.`;
+      return `Usuário com ID ${id} foi deletado com sucesso.`;
     } catch (error) {
-      handleError(`Error deleting user with ID ${id}:`, error);
+      handleError(`Erro ao deletar o usuário com ID ${id}:`, error);
     }
   },
 
   getUserProfiles: async (userId: number): Promise<Profile[] | undefined> => {
     try {
       if (!userId) {
-        throw new Error('User ID is required.');
+        throw new CustomError('É necessário fornecer o ID do usuário.');
       }
       return await userRepository.getUserProfiles(userId);
     } catch (error) {
@@ -232,7 +238,7 @@ export const userService = {
     senha,
   }: LoginInput): Promise<AuthenticatedUser | undefined> => {
     try {
-      if (!email) throw new CustomError('Email is required');
+      if (!email) throw new CustomError('O e-mail é obrigatório.');
 
       const user = await userService.getUserByParams({ email });
 
