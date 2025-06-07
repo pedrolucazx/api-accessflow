@@ -17,7 +17,7 @@ describe('Profile End-to-End Tests', () => {
 `;
 
   const GET_PROFILE_BY_PARAMS = `#graphql
-  query($filter: ProfileFilterInput!) {
+  query GetProfileByParams($filter: ProfileFilterInput!) {
     getProfileByParams(filter: $filter) {
       id
       nome
@@ -37,19 +37,19 @@ describe('Profile End-to-End Tests', () => {
 `;
 
   const UPDATE_PROFILE = `#graphql
-  mutation($id: Int!, $input: ProfileUpdateInput!) {
-    updateProfile(id: $id, input: $input) {
-      id
-      nome
-      descricao
-    }
-  }
+    mutation UpdateProfile($updateProfileId: Int!, $input: ProfileUpdateInput!) {
+      updateProfile(id: $updateProfileId, input: $input) {
+        id
+        nome
+        descricao
+      }
+}
 `;
 
   const DELETE_PROFILE = `#graphql
-  mutation($id: Int!) {
-    deleteProfile(id: $id)
-  }
+    mutation DeleteProfile($deleteProfileId: Int!) {
+      deleteProfile(id: $deleteProfileId)
+    }
 `;
 
   const LOGIN = `#graphql
@@ -164,7 +164,10 @@ describe('Profile End-to-End Tests', () => {
 
     const response = await request(urlServer)
       .post('/')
-      .send({ query: UPDATE_PROFILE, variables: { id: 1, input: updateData } })
+      .send({
+        query: UPDATE_PROFILE,
+        variables: { updateProfileId: 1, input: updateData },
+      })
       .set('Authorization', `Bearer ${adminToken}`);
 
     expect(response.body.data.updateProfile).toEqual({
@@ -178,11 +181,11 @@ describe('Profile End-to-End Tests', () => {
   it('should delete a profile successfully', async () => {
     const response = await request(urlServer)
       .post('/')
-      .send({ query: DELETE_PROFILE, variables: { id: 2 } })
+      .send({ query: DELETE_PROFILE, variables: { deleteProfileId: 2 } })
       .set('Authorization', `Bearer ${adminToken}`);
 
-    expect(response.body.data.deleteProfile).toBe(
-      'Profile with ID 2 was successfully deleted.',
+    expect(response.body.data?.deleteProfile).toBe(
+      'Perfil com ID 2 foi deletado com sucesso.',
     );
     expect(response.status).toBe(200);
   });
@@ -197,6 +200,6 @@ describe('Profile End-to-End Tests', () => {
     expect(response.body.errors[0].message).toEqual(
       'Acesso negado: apenas administradores podem realizar essa ação.',
     );
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(401);
   });
 });

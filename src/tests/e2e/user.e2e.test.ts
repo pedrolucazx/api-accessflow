@@ -394,7 +394,7 @@ describe('User End-to-End Tests', () => {
     expect(response.body.errors[0].message).toEqual(
       'Acesso negado: você não tem permissão para acessar esses dados.',
     );
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(401);
   });
 
   it('should throw an error if unauthenticated user', async () => {
@@ -405,7 +405,9 @@ describe('User End-to-End Tests', () => {
       .send({ query: GET_USER_BY_PARAMS, variables: { filter } })
       .set('Authorization', `Bearer `);
 
-    expect(response.body.errors[0].message).toEqual('Usuário não autenticado.');
-    expect(response.status).toBe(200);
+    expect(response.body.errors[0].message).toEqual(
+      'Token inválido ou expirado',
+    );
+    expect(response.status).toBe(401);
   });
 });

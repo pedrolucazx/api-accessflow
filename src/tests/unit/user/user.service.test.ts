@@ -75,7 +75,7 @@ describe('User Service Unit Tests', () => {
     );
 
     await expect(userService.getAllUsers()).rejects.toThrow(
-      'Error fetching users: Database error',
+      'Erro ao buscar usuários: Database error',
     );
   });
 
@@ -112,7 +112,7 @@ describe('User Service Unit Tests', () => {
     );
 
     await expect(userService.getUserByParams({ id: 1 })).rejects.toThrow(
-      'Error fetching user by parameters: Database error',
+      'Erro ao buscar usuário por parâmetros: Database error',
     );
   });
 
@@ -247,7 +247,7 @@ describe('User Service Unit Tests', () => {
     );
 
     await expect(userService.createUser(userData)).rejects.toThrow(
-      'Error creating user: Database error',
+      'Erro ao criar usuário: Database error',
     );
   });
 
@@ -449,7 +449,7 @@ describe('User Service Unit Tests', () => {
     );
 
     await expect(userService.getUserProfiles(1)).rejects.toThrow(
-      'Error getting profiles for user with ID 1: Database error',
+      'Erro ao obter perfis para usuário com ID 1: Database error',
     );
   });
 
@@ -491,7 +491,7 @@ describe('User Service Unit Tests', () => {
       .mockRejectedValue(new Error('Database error'));
 
     await expect(userService.signUp(userInput)).rejects.toThrow(
-      'Error signing up user: Database error',
+      'Erro ao cadastrar usuário: Database error',
     );
     expect(userService.createUser).toHaveBeenCalledWith({
       ...userInput,
@@ -510,16 +510,11 @@ describe('User Service Unit Tests', () => {
       senha: 'senhaAdmin',
     };
     const mockProfiles = [{ id: 1, nome: 'admin', descricao: 'Administrador' }];
-    jest.spyOn(userService, 'getUserProfiles').mockResolvedValue(mockProfiles);
-    (jwt.sign as jest.Mock).mockReturnValue('mockedToken');
-
-    const result = await userService.getAuthenticatedUser(mockUser);
-
-    expect(result).toEqual({
+    const expectedPayload = {
       ativo: true,
       email: 'admin@exemplo.com',
-      iat: expect.any(Number),
-      exp: expect.any(Number),
+      iat: 111,
+      exp: 222,
       id: 1,
       nome: 'Admin Usuário',
       perfis: [
@@ -530,12 +525,22 @@ describe('User Service Unit Tests', () => {
         },
       ],
       token: 'mockedToken',
-    });
+    };
+    const { iat, exp, token, ...payloadWithoutExtraFields } = expectedPayload;
+    jest.spyOn(userService, 'getUserProfiles').mockResolvedValue(mockProfiles);
+    (jwt.sign as jest.Mock).mockReturnValue('mockedToken');
+    (jwt.decode as jest.Mock).mockReturnValue({ iat: 111, exp: 222 });
+
+    const result = await userService.getAuthenticatedUser(mockUser);
+
+    expect(result).toEqual(expectedPayload);
     expect(userService.getUserProfiles).toHaveBeenCalledWith(mockUser.id);
     expect(jwt.sign).toHaveBeenCalledWith(
-      expect.any(Object),
+      payloadWithoutExtraFields,
       process.env.JWT_SECRET,
+      { expiresIn: '24h' },
     );
+    expect(jwt.decode).toHaveBeenCalledWith('mockedToken');
   });
 
   it('should handle errors gracefully', async () => {
