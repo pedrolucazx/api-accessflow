@@ -64,6 +64,13 @@ export type AssignedProfile = {
   perfil_id: number;
 };
 
+export interface Metrics {
+  totalUsers: number;
+  activeUsers: number;
+  inactiveUsers: number;
+  totalProfiles: number;
+}
+
 export interface UserRepository {
   getAllUsers: () => Promise<User[]>;
   getUserByParams: (filters: UserFilter) => Promise<User | undefined>;
@@ -73,6 +80,9 @@ export interface UserRepository {
   deleteUser: (id: number) => Promise<number>;
   getUserProfiles: (userId: number) => Promise<Profile[]>;
   unassignProfile: (usuario_id: number) => Promise<number>;
+  countUsers(): Promise<number>;
+  countActiveUsers(): Promise<number>;
+  countInactiveUsers(): Promise<number>;
 }
 
 export type argsType = {

@@ -111,4 +111,44 @@ export const userRepository: UserRepository = {
       throw error;
     }
   },
+
+  countUsers: async (): Promise<number> => {
+    try {
+      const { count } = (await database('usuarios')
+        .count<{
+          count: string | number;
+        }>('id as count')
+        .first()) ?? { count: 0 };
+      return Number(count);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  countActiveUsers: async (): Promise<number> => {
+    try {
+      const { count } = (await database('usuarios')
+        .where({ ativo: true })
+        .count<{ count: string | number }>('id as count')
+        .first()) ?? { count: 0 };
+      return Number(count);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  countInactiveUsers: async (): Promise<number> => {
+    try {
+      const { count } = (await database('usuarios')
+        .where({ ativo: false })
+        .count<{ count: string | number }>('id as count')
+        .first()) ?? { count: 0 };
+      return Number(count);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
 };

@@ -24,6 +24,7 @@ export interface ProfileRepository {
     profile: Partial<Profile>,
   ): Promise<Profile | undefined>;
   deleteProfile(id: number): Promise<number | undefined>;
+  countProfiles(): Promise<number>;
 }
 
 export interface ProfileService {

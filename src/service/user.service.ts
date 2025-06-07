@@ -10,6 +10,7 @@ import {
   User,
   UserFilter,
   UserInput,
+  Metrics,
   UserUpdateInput,
 } from '../types/users.types';
 import { CustomError, handleError } from '../utils/handleError';
@@ -248,6 +249,22 @@ export const userService = {
       return await userService.getAuthenticatedUser(user!);
     } catch (error) {
       handleError('Erro ao autenticar o usuário:', error);
+    }
+  },
+
+  getMetrics: async (): Promise<Metrics | undefined> => {
+    try {
+      const [totalUsers, activeUsers, inactiveUsers, totalProfiles] =
+        await Promise.all([
+          userRepository.countUsers(),
+          userRepository.countActiveUsers(),
+          userRepository.countInactiveUsers(),
+          profileRepository.countProfiles(),
+        ]);
+
+      return { totalUsers, activeUsers, inactiveUsers, totalProfiles };
+    } catch (error) {
+      handleError('Não foi possível carregar as métricas', error);
     }
   },
 };

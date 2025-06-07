@@ -67,4 +67,18 @@ export const profileRepository: ProfileRepository = {
       throw error;
     }
   },
+
+  countProfiles: async (): Promise<number> => {
+    try {
+      const { count } = (await database('perfis')
+        .count<{
+          count: string | number;
+        }>('id as count')
+        .first()) ?? { count: 0 };
+      return Number(count);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
 };

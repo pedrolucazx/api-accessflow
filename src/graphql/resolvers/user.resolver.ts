@@ -7,6 +7,7 @@ import {
   SignUpInput,
   User,
   UserInput,
+  Metrics,
   UserUpdateInput,
 } from '../../types/users.types';
 import { Context } from '../context';
@@ -39,6 +40,14 @@ const resolvers = {
       args: { input: LoginInput },
     ): Promise<AuthenticatedUser | undefined> => {
       return await userService.login(args?.input);
+    },
+    getMetrics: async (
+      _obj: unknown,
+      _args: argsType,
+      context: Context,
+    ): Promise<Metrics | undefined> => {
+      context.validateAdmin();
+      return await userService.getMetrics();
     },
   },
   Mutation: {

@@ -48,8 +48,16 @@ input UserFilter {
   email: String
 }
 
+type Metrics {
+  totalUsers: Int!
+  activeUsers: Int!
+  inactiveUsers: Int!
+  totalProfiles: Int!
+}
+
 type Query {
   getAllUsers: [User]
+  getMetrics: Metrics
   getUserByParams(filter: UserFilter!): User
   login(input: LoginInput): AuthenticatedUser
 }
