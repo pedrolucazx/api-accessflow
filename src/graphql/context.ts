@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql';
 import jwt from 'jsonwebtoken';
 import { AuthenticatedUser } from '../types/users.types';
 
@@ -25,6 +26,9 @@ export async function createContext({
       ) as AuthenticatedUser;
     } catch (error) {
       console.error(error);
+      throw new GraphQLError('Token inválido ou expirado', {
+        extensions: { code: 'UNAUTHENTICATED', http: { status: 401 } },
+      });
     }
   }
 
@@ -34,20 +38,22 @@ export async function createContext({
 
   const validateAdmin = () => {
     if (!user || !isAdmin()) {
-      throw new Error(
+      throw new GraphQLError(
         'Acesso negado: apenas administradores podem realizar essa ação.',
+        {
+          extensions: { code: 'UNAUTHENTICATED', http: { status: 401 } },
+        },
       );
     }
   };
 
   const validateUserAccess = (userId: number) => {
-    if (!user) {
-      throw new Error('Usuário não autenticado.');
-    }
-
-    if (!isAdmin() && user.id !== userId) {
-      throw new Error(
+    if (!isAdmin() && user?.id !== userId) {
+      throw new GraphQLError(
         'Acesso negado: você não tem permissão para acessar esses dados.',
+        {
+          extensions: { code: 'UNAUTHENTICATED', http: { status: 401 } },
+        },
       );
     }
   };

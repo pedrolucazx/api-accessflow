@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { profileRepository } from '../repositories/profile.repository';
 import { userRepository } from '../repositories/user.repository';
 import { Profile } from '../types/profiles.types';
@@ -12,7 +13,6 @@ import {
   UserUpdateInput,
 } from '../types/users.types';
 import { CustomError, handleError } from '../utils/handleError';
-import jwt from 'jsonwebtoken';
 
 export const userService = {
   getAllUsers: async (): Promise<User[] | undefined> => {
@@ -23,7 +23,7 @@ export const userService = {
       }
       return users;
     } catch (error) {
-      handleError('Error fetching users:', error);
+      handleError('Erro ao buscar usuários:', error);
     }
   },
 
@@ -40,14 +40,14 @@ export const userService = {
 
       return user;
     } catch (error) {
-      handleError('Error fetching user by parameters:', error);
+      handleError('Erro ao buscar usuário por parâmetros:', error);
     }
   },
 
   createUser: async (data: UserInput): Promise<User | undefined> => {
     try {
       const { perfis, ...user } = data;
-      const profilesIDs = [];
+      const profilesIDs: (number | undefined)[] = [];
       if (
         !Object.keys(user).length ||
         Object.values(user).some((value) => !value)
@@ -61,8 +61,8 @@ export const userService = {
       if (perfis?.length) {
         for (const perfil of perfis) {
           const profile = await profileRepository.getProfileByParams(perfil);
-          profilesIDs.push(profile?.id);
           if (!profile) throw new CustomError('Perfil não encontrado.');
+          profilesIDs.push(profile.id);
         }
       }
 
@@ -87,7 +87,7 @@ export const userService = {
 
       return createdUser;
     } catch (error) {
-      handleError('Error creating user:', error);
+      handleError('Erro ao criar usuário:', error);
     }
   },
 
@@ -97,7 +97,7 @@ export const userService = {
   ): Promise<User | undefined> => {
     try {
       const { perfis, ...user } = data;
-      const profilesIDs = [];
+      const profilesIDs: (number | undefined)[] = [];
       if (!id || !user || !Object.keys(user).length) {
         throw new CustomError('Dados do usuário ou ID inválidos.');
       }
@@ -105,8 +105,8 @@ export const userService = {
       if (perfis?.length) {
         for (const perfil of perfis) {
           const profile = await profileRepository.getProfileByParams(perfil);
-          profilesIDs.push(profile?.id);
           if (!profile) throw new CustomError('Perfil não encontrado.');
+          profilesIDs.push(profile?.id);
         }
       }
 
@@ -132,15 +132,15 @@ export const userService = {
         updatedUser.id,
       );
       const isAdmin = existingProfiles?.some(
-        (profile) => profile.nome === 'admin',
+        (profile) => profile?.nome === 'admin',
       );
 
       if (perfis?.length && isAdmin) {
         await userRepository.unassignProfile(id);
-        for (const id of profilesIDs) {
+        for (const profileId of profilesIDs) {
           const assignedProfile = await userRepository.assignProfile({
             usuario_id: updatedUser?.id,
-            perfil_id: id!,
+            perfil_id: profileId!,
           });
 
           if (!assignedProfile) {
@@ -181,7 +181,7 @@ export const userService = {
       }
       return await userRepository.getUserProfiles(userId);
     } catch (error) {
-      handleError(`Error getting profiles for user with ID ${userId}:`, error);
+      handleError(`Erro ao obter perfis para usuário com ID ${userId}:`, error);
     }
   },
 
@@ -194,7 +194,7 @@ export const userService = {
 
       return createdUser;
     } catch (error) {
-      handleError('Error signing up user:', error);
+      handleError('Erro ao cadastrar usuário:', error);
     }
   },
 
@@ -203,8 +203,6 @@ export const userService = {
   ): Promise<AuthenticatedUser | undefined> => {
     try {
       const profiles = await userService.getUserProfiles(user.id);
-      const iat = Math.floor(Date.now() / 1000);
-      const exp = iat + 24 * 60 * 60;
 
       const payload = {
         id: user.id,
@@ -212,11 +210,13 @@ export const userService = {
         email: user.email,
         ativo: user.ativo,
         perfis: profiles,
-        iat,
-        exp,
       };
 
-      const token = jwt.sign(payload, process.env.JWT_SECRET as string);
+      const token = jwt.sign(payload, process.env.JWT_SECRET as string, {
+        expiresIn: '24h',
+      });
+
+      const decoded = jwt.decode(token) as { iat: number; exp: number };
 
       return {
         id: user.id,
@@ -224,8 +224,8 @@ export const userService = {
         email: user.email,
         ativo: user.ativo,
         token,
-        iat,
-        exp,
+        iat: decoded.iat,
+        exp: decoded.exp,
         perfis: profiles,
       };
     } catch (error) {
