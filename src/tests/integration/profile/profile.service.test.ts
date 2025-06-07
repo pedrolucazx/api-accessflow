@@ -56,7 +56,7 @@ describe('Profile Service Integration Tests', () => {
     const deletedProfile = await profileService.deleteProfile(id!);
 
     expect(deletedProfile).toEqual(
-      `Profile with ID ${id} was successfully deleted.`,
+      `Perfil com ID ${id} foi deletado com sucesso.`,
     );
   });
 });

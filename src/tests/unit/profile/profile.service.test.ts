@@ -52,7 +52,6 @@ describe('Profile Service Unit Tests', () => {
     expect(result).toEqual(createdProfile);
     expect(profileRepository.createProfile).toHaveBeenCalledWith(newProfile);
   });
-
   it('should update a profile successfully', async () => {
     const updatedData = {
       nome: 'Updated admin',
@@ -79,9 +78,7 @@ describe('Profile Service Unit Tests', () => {
     const profileId = 1;
     (profileRepository.deleteProfile as jest.Mock).mockResolvedValue(1);
     const result = await profileService.deleteProfile(profileId);
-    expect(result).toBe(
-      `Profile with ID ${profileId} was successfully deleted.`,
-    );
+    expect(result).toBe(`Perfil com ID ${profileId} foi deletado com sucesso.`);
     expect(profileRepository.deleteProfile).toHaveBeenCalledWith(profileId);
   });
 
@@ -89,23 +86,22 @@ describe('Profile Service Unit Tests', () => {
     (profileRepository.getAllProfiles as jest.Mock).mockResolvedValue([]);
 
     await expect(profileService.getAllProfiles()).rejects.toThrow(
-      'No profiles found.',
+      'Nenhum perfil encontrado.',
     );
   });
-
   it('should throw an error database during fetch of all profiles', async () => {
     (profileRepository.getAllProfiles as jest.Mock).mockRejectedValue(
       new Error('Database error'),
     );
 
     await expect(profileService.getAllProfiles()).rejects.toThrow(
-      'Error fetching profiles: Database error',
+      'Erro ao buscar perfis: Database error',
     );
   });
 
   it('should throw an error invalid parameters for fetching a profile', async () => {
     await expect(profileService.getProfileByParams({})).rejects.toThrow(
-      'At least one parameter must be provided.',
+      'Pelo menos um parâmetro deve ser fornecido.',
     );
   });
 
@@ -115,7 +111,7 @@ describe('Profile Service Unit Tests', () => {
     );
 
     await expect(
-      profileService.getProfileByParams({ nome: 'Non-existent' }),
+      profileService.getProfileByParams({ nome: 'Inexistente' }),
     ).rejects.toThrow('Perfil não encontrado.');
   });
 
@@ -125,13 +121,13 @@ describe('Profile Service Unit Tests', () => {
     );
 
     await expect(profileService.getProfileByParams({ id: 1 })).rejects.toThrow(
-      'Error fetching profile by parameters: Database error',
+      'Erro ao buscar perfil por parâmetros: Database error',
     );
   });
 
   it('should throw an error incomplete profile data during creation', async () => {
     await expect(profileService.createProfile({} as Profile)).rejects.toThrow(
-      'Profile data is incomplete or invalid.',
+      'Dados do perfil incompletos ou inválidos.',
     );
   });
 
@@ -143,7 +139,7 @@ describe('Profile Service Unit Tests', () => {
         nome: 'New Profile',
         descricao: 'New Profile',
       }),
-    ).rejects.toThrow('Failed to create profile.');
+    ).rejects.toThrow('Falha ao criar perfil.');
   });
 
   it('should throw an error database during profile create', async () => {
@@ -156,12 +152,12 @@ describe('Profile Service Unit Tests', () => {
         nome: 'New Profile',
         descricao: 'New Profile',
       }),
-    ).rejects.toThrow('Error creating profile: Database error');
+    ).rejects.toThrow('Erro ao criar perfil: Database error');
   });
 
   it('should throw an error invalid ID or data during update', async () => {
     await expect(profileService.updateProfile(0, {})).rejects.toThrow(
-      'Invalid profile data or ID.',
+      'Dados do perfil ou ID inválidos.',
     );
   });
 
@@ -170,7 +166,7 @@ describe('Profile Service Unit Tests', () => {
 
     await expect(
       profileService.updateProfile(1, { nome: 'Update' }),
-    ).rejects.toThrow(`No profile found with ID 1 to update.`);
+    ).rejects.toThrow(`Nenhum perfil encontrado com o ID 1 para atualizar.`);
   });
 
   it('should throw an error database during profile update', async () => {
@@ -180,13 +176,13 @@ describe('Profile Service Unit Tests', () => {
 
     await expect(
       profileService.updateProfile(1, { nome: 'Update' }),
-    ).rejects.toThrow('Error updating profile with ID 1: Database error');
+    ).rejects.toThrow('Erro ao atualizar perfil com ID 1: Database error');
   });
 
   it('should throw an error missing ID during deletion', async () => {
     await expect(
       profileService.deleteProfile(undefined as unknown as number),
-    ).rejects.toThrow('Profile ID is required.');
+    ).rejects.toThrow('É necessário fornecer o ID do perfil.');
   });
 
   it('should throw an error database during profile deletion', async () => {
@@ -195,7 +191,7 @@ describe('Profile Service Unit Tests', () => {
     );
 
     await expect(profileService.deleteProfile(1)).rejects.toThrow(
-      `Error deleting profile with ID 1: Database error`,
+      `Erro ao deletar perfil com ID 1: Database error`,
     );
   });
 
@@ -203,7 +199,7 @@ describe('Profile Service Unit Tests', () => {
     (profileRepository.deleteProfile as jest.Mock).mockResolvedValue(undefined);
 
     await expect(profileService.deleteProfile(1)).rejects.toThrow(
-      'No profile found with ID 1 to delete.',
+      'Nenhum perfil encontrado com o ID 1 para deletar.',
     );
   });
 });
