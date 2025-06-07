@@ -12,11 +12,11 @@ export const profileService: ProfileService = {
     try {
       const profiles = await profileRepository.getAllProfiles();
       if (!profiles?.length) {
-        throw new CustomError('No profiles found.');
+        throw new CustomError('Nenhum perfil encontrado.');
       }
       return profiles;
     } catch (error) {
-      handleError('Error fetching profiles:', error);
+      handleError('Erro ao buscar perfis:', error);
     }
   },
 
@@ -25,7 +25,7 @@ export const profileService: ProfileService = {
   ): Promise<Profile | undefined> => {
     try {
       if (!Object.keys(filters).length) {
-        throw new CustomError('At least one parameter must be provided.');
+        throw new CustomError('Pelo menos um parâmetro deve ser fornecido.');
       }
       const profile = await profileRepository.getProfileByParams(filters);
       if (!profile) {
@@ -33,7 +33,7 @@ export const profileService: ProfileService = {
       }
       return profile;
     } catch (error) {
-      handleError('Error fetching profile by parameters:', error);
+      handleError('Erro ao buscar perfil por parâmetros:', error);
     }
   },
 
@@ -42,15 +42,15 @@ export const profileService: ProfileService = {
   ): Promise<Profile | undefined> => {
     try {
       if (!profile || !profile.nome) {
-        throw new CustomError('Profile data is incomplete or invalid.');
+        throw new CustomError('Dados do perfil incompletos ou inválidos.');
       }
 
       const createdProfile = await profileRepository.createProfile(profile);
-      if (!createdProfile) throw new CustomError('Failed to create profile.');
+      if (!createdProfile) throw new CustomError('Falha ao criar perfil.');
 
       return createdProfile;
     } catch (error) {
-      handleError('Error creating profile:', error);
+      handleError('Erro ao criar perfil:', error);
     }
   },
 
@@ -60,34 +60,38 @@ export const profileService: ProfileService = {
   ): Promise<Profile | undefined> => {
     try {
       if (!id || !profile || !Object.keys(profile).length) {
-        throw new CustomError('Invalid profile data or ID.');
+        throw new CustomError('Dados do perfil ou ID inválidos.');
       }
 
       const updatedProfile = await profileRepository.updateProfile(id, profile);
       if (!updatedProfile) {
-        throw new CustomError(`No profile found with ID ${id} to update.`);
+        throw new CustomError(
+          `Nenhum perfil encontrado com o ID ${id} para atualizar.`,
+        );
       }
 
       return updatedProfile;
     } catch (error) {
-      handleError(`Error updating profile with ID ${id}:`, error);
+      handleError(`Erro ao atualizar perfil com ID ${id}:`, error);
     }
   },
 
   deleteProfile: async (id: number): Promise<string | undefined> => {
     try {
       if (!id) {
-        throw new CustomError('Profile ID is required.');
+        throw new CustomError('É necessário fornecer o ID do perfil.');
       }
 
       const deletedRows = await profileRepository.deleteProfile(id);
       if (!deletedRows) {
-        throw new CustomError(`No profile found with ID ${id} to delete.`);
+        throw new CustomError(
+          `Nenhum perfil encontrado com o ID ${id} para deletar.`,
+        );
       }
 
-      return `Profile with ID ${id} was successfully deleted.`;
+      return `Perfil com ID ${id} foi deletado com sucesso.`;
     } catch (error) {
-      handleError(`Error deleting profile with ID ${id}:`, error);
+      handleError(`Erro ao deletar perfil com ID ${id}:`, error);
     }
   },
 };
