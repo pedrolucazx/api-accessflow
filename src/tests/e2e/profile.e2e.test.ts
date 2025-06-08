@@ -184,8 +184,8 @@ describe('Profile End-to-End Tests', () => {
       .send({ query: DELETE_PROFILE, variables: { deleteProfileId: 2 } })
       .set('Authorization', `Bearer ${adminToken}`);
 
-    expect(response.body.data?.deleteProfile).toBe(
-      'Perfil com ID 2 foi deletado com sucesso.',
+    expect(response.body.data?.deleteProfile).toMatch(
+      /^Perfil com ID 2 foi deletado com sucesso.$/,
     );
     expect(response.status).toBe(200);
   });
@@ -197,8 +197,8 @@ describe('Profile End-to-End Tests', () => {
       .set('Authorization', `Bearer ${authToken}`)
       .send({ query: GET_ALL_PROFILES });
 
-    expect(response.body.errors[0].message).toEqual(
-      'Acesso negado: apenas administradores podem realizar essa ação.',
+    expect(response.body.errors[0].message).toMatch(
+      /^Acesso negado: apenas administradores podem realizar essa ação.$/,
     );
     expect(response.status).toBe(401);
   });

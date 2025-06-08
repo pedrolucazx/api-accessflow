@@ -13,6 +13,7 @@ const createMockConnection = () => ({
   select: jest.fn().mockReturnThis(),
   insert: jest.fn().mockReturnValue({ returning: jest.fn() }),
   where: jest.fn().mockReturnThis(),
+  count: jest.fn().mockReturnThis(),
   first: jest.fn(),
   update: jest.fn().mockReturnValue({ returning: jest.fn() }),
   delete: jest.fn(),
@@ -169,7 +170,7 @@ describe('User Model Unit Tests', () => {
     mockDatabase.select.mockRejectedValueOnce(new Error('Database error'));
 
     await expect(userRepository.getAllUsers()).rejects.toThrow(
-      'Database error',
+      /^Database error$/,
     );
   });
 
@@ -177,7 +178,7 @@ describe('User Model Unit Tests', () => {
     mockDatabase.first.mockRejectedValueOnce(new Error('Database error'));
 
     await expect(userRepository.getUserByParams({ id: 1 })).rejects.toThrow(
-      'Database error',
+      /^Database error$/,
     );
   });
 
@@ -192,7 +193,7 @@ describe('User Model Unit Tests', () => {
         email: 'novousuario@exemplo.com',
         senha: 'Senha@321',
       }),
-    ).rejects.toThrow('Database error');
+    ).rejects.toThrow(/^Database error$/);
   });
 
   it('should throw an error when assoate profile to user', async () => {
@@ -205,14 +206,14 @@ describe('User Model Unit Tests', () => {
         usuario_id: 1,
         perfil_id: 1,
       }),
-    ).rejects.toThrow('Database error');
+    ).rejects.toThrow(/^Database error$/);
   });
 
   it('should throw an error when unassoate profile to user', async () => {
     mockDatabase.delete.mockRejectedValueOnce(new Error('Database error'));
 
     await expect(userRepository.unassignProfile(1)).rejects.toThrow(
-      'Database error',
+      /^Database error$/,
     );
   });
 
@@ -228,14 +229,14 @@ describe('User Model Unit Tests', () => {
         senha: '',
         data_update: new Date().toISOString(),
       }),
-    ).rejects.toThrow('Database error');
+    ).rejects.toThrow(/^Database error$/);
   });
 
   it('should throw an error when deleting a user fails', async () => {
     mockDatabase.delete.mockRejectedValueOnce(new Error('Database error'));
 
     await expect(userRepository.deleteUser(1)).rejects.toThrow(
-      'Database error',
+      /^Database error$/,
     );
   });
 
@@ -258,7 +259,91 @@ describe('User Model Unit Tests', () => {
   it('should throw an error if database query fails', async () => {
     mockDatabase.select.mockRejectedValueOnce(new Error('Database error'));
     await expect(userRepository.getUserProfiles(1)).rejects.toThrow(
-      'Database error',
+      /^Database error$/,
+    );
+  });
+
+  it('should return count of users', async () => {
+    mockDatabase.count.mockReturnThis();
+    mockDatabase.first.mockResolvedValueOnce({ count: '100' });
+    const total = await userRepository.countUsers();
+    expect(total).toBe(100);
+    expect(mockDatabase.count).toHaveBeenCalledWith('id as count');
+    expect(mockDatabase.first).toHaveBeenCalled();
+  });
+
+  it('should return 0 when there are no users', async () => {
+    mockDatabase.count.mockReturnThis();
+    mockDatabase.first.mockResolvedValueOnce(undefined);
+    const total = await userRepository.countUsers();
+    expect(total).toBe(0);
+    expect(mockDatabase.count).toHaveBeenCalledWith('id as count');
+    expect(mockDatabase.first).toHaveBeenCalled();
+  });
+
+  it('should throw an error if count of users query fails', async () => {
+    mockDatabase.count.mockReturnThis();
+    mockDatabase.first.mockRejectedValueOnce(new Error('Database error'));
+    await expect(userRepository.countUsers()).rejects.toThrow(
+      /^Database error$/,
+    );
+  });
+
+  it('should return count of active users', async () => {
+    mockDatabase.where.mockReturnThis();
+    mockDatabase.count.mockReturnThis();
+    mockDatabase.first.mockResolvedValueOnce({ count: '75' });
+    const total = await userRepository.countActiveUsers();
+    expect(total).toBe(75);
+    expect(mockDatabase.where).toHaveBeenCalledWith({ ativo: true });
+    expect(mockDatabase.count).toHaveBeenCalledWith('id as count');
+  });
+
+  it('should return 0 when there are no active users', async () => {
+    mockDatabase.where.mockReturnThis();
+    mockDatabase.count.mockReturnThis();
+    mockDatabase.first.mockResolvedValueOnce(undefined);
+    const total = await userRepository.countActiveUsers();
+    expect(total).toBe(0);
+    expect(mockDatabase.count).toHaveBeenCalledWith('id as count');
+    expect(mockDatabase.first).toHaveBeenCalled();
+  });
+
+  it('should throw an error if count of active users query fails', async () => {
+    mockDatabase.where.mockReturnThis();
+    mockDatabase.count.mockReturnThis();
+    mockDatabase.first.mockRejectedValueOnce(new Error('Database error'));
+    await expect(userRepository.countActiveUsers()).rejects.toThrow(
+      /^Database error$/,
+    );
+  });
+
+  it('should return count of inactive users', async () => {
+    mockDatabase.where.mockReturnThis();
+    mockDatabase.count.mockReturnThis();
+    mockDatabase.first.mockResolvedValueOnce({ count: '25' });
+    const total = await userRepository.countInactiveUsers();
+    expect(total).toBe(25);
+    expect(mockDatabase.where).toHaveBeenCalledWith({ ativo: false });
+    expect(mockDatabase.count).toHaveBeenCalledWith('id as count');
+  });
+
+  it('should return 0 when there are no inactive users', async () => {
+    mockDatabase.where.mockReturnThis();
+    mockDatabase.count.mockReturnThis();
+    mockDatabase.first.mockResolvedValueOnce(undefined);
+    const total = await userRepository.countInactiveUsers();
+    expect(total).toBe(0);
+    expect(mockDatabase.count).toHaveBeenCalledWith('id as count');
+    expect(mockDatabase.first).toHaveBeenCalled();
+  });
+
+  it('should throw an error if count of inactive users query fails', async () => {
+    mockDatabase.where.mockReturnThis();
+    mockDatabase.count.mockReturnThis();
+    mockDatabase.first.mockRejectedValueOnce(new Error('Database error'));
+    await expect(userRepository.countInactiveUsers()).rejects.toThrow(
+      /^Database error$/,
     );
   });
 });

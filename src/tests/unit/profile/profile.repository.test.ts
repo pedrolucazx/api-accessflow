@@ -8,6 +8,7 @@ const createMockConnection = () => ({
   select: jest.fn(),
   insert: jest.fn().mockReturnValue({ returning: jest.fn() }),
   where: jest.fn().mockReturnThis(),
+  count: jest.fn().mockReturnThis(),
   first: jest.fn(),
   update: jest.fn().mockReturnValue({ returning: jest.fn() }),
   delete: jest.fn(),
@@ -40,7 +41,7 @@ describe('Profile Model Unit Tests', () => {
       mockDatabase.select.mockRejectedValueOnce(new Error('Database error'));
 
       await expect(profileRepository.getAllProfiles()).rejects.toThrow(
-        'Database error',
+        /^Database error$/,
       );
     });
 
@@ -60,7 +61,7 @@ describe('Profile Model Unit Tests', () => {
 
       await expect(
         profileRepository.getProfileByParams({ id: 1 }),
-      ).rejects.toThrow('Database error');
+      ).rejects.toThrow(/^Database error$/);
     });
 
     it('should create a new profile successfully', async () => {
@@ -83,7 +84,7 @@ describe('Profile Model Unit Tests', () => {
           nome: 'admin',
           descricao: 'Administrador',
         }),
-      ).rejects.toThrow('Database error');
+      ).rejects.toThrow(/^Database error$/);
     });
 
     it('should update a profile successfully', async () => {
@@ -108,7 +109,7 @@ describe('Profile Model Unit Tests', () => {
 
       await expect(
         profileRepository.updateProfile(1, { nome: 'Updated Admin' }),
-      ).rejects.toThrow('Database error');
+      ).rejects.toThrow(/^Database error$/);
     });
 
     it('should delete a profile successfully', async () => {
@@ -127,8 +128,34 @@ describe('Profile Model Unit Tests', () => {
       mockDatabase.delete.mockRejectedValueOnce(new Error('Database error'));
 
       await expect(profileRepository.deleteProfile(1)).rejects.toThrow(
-        'Database error',
+        /^Database error$/,
       );
+    });
+
+    it('should return count of users', async () => {
+      mockDatabase.count.mockReturnThis();
+      mockDatabase.first.mockResolvedValueOnce({ count: '100' });
+      const total = await profileRepository.countProfiles();
+      expect(total).toBe(100);
+      expect(mockDatabase.count).toHaveBeenCalledWith('id as count');
+      expect(mockDatabase.first).toHaveBeenCalled();
+    });
+
+    it('should throw an error if count of users query fails', async () => {
+      mockDatabase.count.mockReturnThis();
+      mockDatabase.first.mockRejectedValueOnce(new Error('Database error'));
+      await expect(profileRepository.countProfiles()).rejects.toThrow(
+        /^Database error$/,
+      );
+    });
+
+    it('should return 0 when there are no profiles', async () => {
+      mockDatabase.count.mockReturnThis();
+      mockDatabase.first.mockResolvedValueOnce(undefined);
+      const total = await profileRepository.countProfiles();
+      expect(total).toBe(0);
+      expect(mockDatabase.count).toHaveBeenCalledWith('id as count');
+      expect(mockDatabase.first).toHaveBeenCalled();
     });
   });
 });

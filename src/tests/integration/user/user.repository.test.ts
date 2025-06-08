@@ -92,4 +92,19 @@ describe('User Repository Integration Tests', () => {
     const deletedRows = await userRepository.deleteUser(id!);
     expect(deletedRows).toBe(1);
   });
+
+  it('should return count of users', async () => {
+    const total = await userRepository.countUsers();
+    expect(total).toBe(2);
+  });
+
+  it('should return count of active users', async () => {
+    const total = await userRepository.countActiveUsers();
+    expect(total).toBe(2);
+  });
+
+  it('should return count of inactive users', async () => {
+    const total = await userRepository.countInactiveUsers();
+    expect(total).toBe(0);
+  });
 });

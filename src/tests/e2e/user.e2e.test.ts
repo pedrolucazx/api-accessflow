@@ -119,6 +119,17 @@ describe('User End-to-End Tests', () => {
     }
   `;
 
+  const GET_METRICS = `#graphql
+    query GetMetrics {
+      getMetrics {
+        totalUsers
+        activeUsers
+        inactiveUsers
+        totalProfiles
+      }
+    }
+  `;
+
   let apolloServer: ApolloServer<Context>;
   let urlServer: string;
   let adminToken: string;
@@ -409,5 +420,20 @@ describe('User End-to-End Tests', () => {
       'Token inválido ou expirado',
     );
     expect(response.status).toBe(401);
+  });
+
+  it('should return the metrics successfully successfully', async () => {
+    const response = await request(urlServer)
+      .post('/')
+      .send({ query: GET_METRICS })
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(response.body.data.getMetrics).toEqual({
+      totalUsers: 3,
+      activeUsers: 3,
+      inactiveUsers: 0,
+      totalProfiles: 2,
+    });
+    expect(response.status).toBe(200);
   });
 });

@@ -58,4 +58,9 @@ describe('Profile Model Integration Tests', () => {
     const deleteRows = await profileRepository.deleteProfile(id!);
     expect(deleteRows).toBe(1);
   });
+
+  it('should return count of profiles', async () => {
+    const total = await profileRepository.countProfiles();
+    expect(total).toBe(2);
+  });
 });

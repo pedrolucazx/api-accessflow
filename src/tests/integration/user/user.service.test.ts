@@ -17,10 +17,10 @@ describe('User Service Integration Tests', () => {
   });
 
   it('should fetch all users from the database', async () => {
-    const profiles = await userService.getAllUsers();
+    const users = await userService.getAllUsers();
 
-    expect(profiles).toHaveLength(2);
-    expect(profiles).toEqual([
+    expect(users).toHaveLength(2);
+    expect(users).toEqual([
       {
         ativo: 1,
         data_criacao: expect.any(String),
@@ -63,8 +63,8 @@ describe('User Service Integration Tests', () => {
       senha: 'Password@321',
     };
 
-    const createdProfile = await userService.createUser(newUser);
-    expect(createdProfile).toEqual({
+    const createdUser = await userService.createUser(newUser);
+    expect(createdUser).toEqual({
       id: 3,
       ativo: 1,
       nome: 'new user',
@@ -83,9 +83,11 @@ describe('User Service Integration Tests', () => {
       senha: 'Password@321',
       data_update: new Date().toISOString(),
     };
-    const updatedProfile = await userService.updateUser(id!, updates);
+    const updatedUser = await userService.updateUser(id!, updates, [
+      { id: 2, nome: 'comum', descricao: 'Comum' },
+    ]);
 
-    expect(updatedProfile).toEqual({
+    expect(updatedUser).toEqual({
       id: 2,
       ativo: 1,
       nome: 'update user',
@@ -96,11 +98,11 @@ describe('User Service Integration Tests', () => {
     });
   });
 
-  it('should delete an existing profile and confirm its removal', async () => {
+  it('should delete an existing user and confirm its removal', async () => {
     const id = latestUser?.id;
-    const deletedProfile = await userService.deleteUser(id!);
+    const deletedUser = await userService.deleteUser(id!);
 
-    expect(deletedProfile).toEqual(
+    expect(deletedUser).toEqual(
       `Usuário com ID ${id} foi deletado com sucesso.`,
     );
   });
@@ -112,8 +114,8 @@ describe('User Service Integration Tests', () => {
       senha: 'Password@321',
     };
 
-    const createdProfile = await userService.signUp(newUser);
-    expect(createdProfile).toEqual({
+    const createdUser = await userService.signUp(newUser);
+    expect(createdUser).toEqual({
       email: 'signup@mail.com',
       id: 4,
       nome: 'new user',
@@ -121,6 +123,17 @@ describe('User Service Integration Tests', () => {
       data_update: expect.any(String),
       data_criacao: expect.any(String),
       senha: expect.any(String),
+    });
+  });
+
+  it('should return the metrics successfully', async () => {
+    const metrics = await userService.getMetrics();
+
+    expect(metrics).toEqual({
+      totalUsers: 3,
+      activeUsers: 3,
+      inactiveUsers: 0,
+      totalProfiles: 2,
     });
   });
 });
