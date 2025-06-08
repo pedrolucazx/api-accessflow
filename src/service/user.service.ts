@@ -95,53 +95,58 @@ export const userService = {
   updateUser: async (
     id: number,
     data: UserUpdateInput,
+    currentUserProfiles: Profile[],
   ): Promise<User | undefined> => {
     try {
-      const { perfis, ...user } = data;
-      const profilesIDs: (number | undefined)[] = [];
-      if (!id || !user || !Object.keys(user).length) {
+      const { perfis, ...userData } = data;
+      if (!id || !userData || !Object.keys(userData).length) {
         throw new CustomError('Dados do usuário ou ID inválidos.');
       }
 
-      if (perfis?.length) {
-        for (const perfil of perfis) {
-          const profile = await profileRepository.getProfileByParams(perfil);
-          if (!profile) throw new CustomError('Perfil não encontrado.');
-          profilesIDs.push(profile?.id);
-        }
+      const existingUser = await userService.getUserByParams({ id });
+      const isAdmin = currentUserProfiles?.some((p) => p?.nome === 'admin');
+
+      let allowedData = userData;
+      if (!isAdmin) {
+        allowedData = {
+          nome: userData.nome,
+          email: userData.email,
+          senha: userData.senha,
+          data_update: new Date().toISOString(),
+        };
       }
 
-      const existingUser = await userService.getUserByParams({ id });
-      const hashedPassword = user?.senha
-        ? await bcrypt.hash(user?.senha, 10)
+      const hashedPassword = allowedData?.senha
+        ? await bcrypt.hash(allowedData?.senha, 10)
         : existingUser?.senha;
 
       const updatedUser = await userRepository.updateUser(id, {
         ...existingUser,
-        ...user,
+        ...allowedData,
         senha: hashedPassword,
         data_update: new Date().toISOString(),
       });
 
       if (!updatedUser) {
         throw new CustomError(
-          `Nenhum usuário encontrado com o ID ${id} para atualizar.`,
+          `Usuário com ID ${id} existe, mas nenhuma modificação foi aplicada.`,
         );
       }
 
-      const existingProfiles = await userService.getUserProfiles(
-        updatedUser.id,
-      );
-      const isAdmin = existingProfiles?.some(
-        (profile) => profile?.nome === 'admin',
-      );
+      if (isAdmin && perfis?.length) {
+        const profilesIDs: number[] = [];
 
-      if (perfis?.length && isAdmin) {
+        for (const perfil of perfis) {
+          const profile = await profileRepository.getProfileByParams(perfil);
+          if (!profile) throw new CustomError('Perfil não encontrado.');
+          profilesIDs.push(profile.id);
+        }
+
         await userRepository.unassignProfile(id);
         for (const profileId of profilesIDs) {
           const assignedProfile = await userRepository.assignProfile({
-            usuario_id: updatedUser?.id,
-            perfil_id: profileId!,
+            usuario_id: updatedUser.id,
+            perfil_id: profileId,
           });
 
           if (!assignedProfile) {
@@ -264,7 +269,7 @@ export const userService = {
 
       return { totalUsers, activeUsers, inactiveUsers, totalProfiles };
     } catch (error) {
-      handleError('Não foi possível carregar as métricas', error);
+      handleError('Não foi possível carregar as métricas:', error);
     }
   },
 };

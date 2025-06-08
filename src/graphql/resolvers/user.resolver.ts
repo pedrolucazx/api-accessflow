@@ -65,7 +65,11 @@ const resolvers = {
       context: Context,
     ): Promise<User | undefined> => {
       context.validateUserAccess(args?.id);
-      return await userService.updateUser(args?.id, args?.input);
+      return await userService.updateUser(
+        args?.id,
+        args?.input,
+        context?.user?.perfis as Profile[],
+      );
     },
     deleteUser: async (
       _obj: unknown,
