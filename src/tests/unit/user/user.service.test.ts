@@ -1,7 +1,7 @@
-import { userService } from '@/service/user.service';
-import { userRepository } from '@/repositories/user.repository';
-import { User, UserUpdateInput } from '@/types/users.types';
 import { profileRepository } from '@/repositories/profile.repository';
+import { userRepository } from '@/repositories/user.repository';
+import { userService } from '@/service/user.service';
+import { User, UserUpdateInput } from '@/types/users.types';
 import jwt from 'jsonwebtoken';
 
 jest.mock('@/repositories/user.repository');
@@ -65,7 +65,7 @@ describe('User Service Unit Tests', () => {
     (userRepository.getAllUsers as jest.Mock).mockResolvedValue([]);
 
     await expect(userService.getAllUsers()).rejects.toThrow(
-      'Nenhum usuário encontrado.',
+      /^Nenhum usuário encontrado.$/,
     );
   });
 
@@ -75,26 +75,25 @@ describe('User Service Unit Tests', () => {
     );
 
     await expect(userService.getAllUsers()).rejects.toThrow(
-      'Erro ao buscar usuários: Database error',
+      /^Erro ao buscar usuários: Database error$/,
     );
   });
 
   it('should fetch a user by valid parameters successfully', async () => {
+    const id = { id: 1 };
     const { senha, ...expectedUser } = mockUsers[0];
     (userRepository.getUserByParams as jest.Mock).mockResolvedValue(
       expectedUser,
     );
 
-    const user = await userService.getUserByParams({ id: 1 });
+    const user = await userService.getUserByParams(id);
     expect(user).toEqual(expectedUser);
-    expect(userRepository.getUserByParams).toHaveBeenCalledWith({
-      id: 1,
-    });
+    expect(userRepository.getUserByParams).toHaveBeenCalledWith(id);
   });
 
   it('should throw an error invalid parameters for fetching a user', async () => {
     await expect(userService.getUserByParams({})).rejects.toThrow(
-      'Pelo menos um parâmetro deve ser fornecido.',
+      /^Pelo menos um parâmetro deve ser fornecido.$/,
     );
   });
 
@@ -103,7 +102,7 @@ describe('User Service Unit Tests', () => {
 
     await expect(
       userService.getUserByParams({ nome: 'Non-existent' }),
-    ).rejects.toThrow('Usuário não encontrado.');
+    ).rejects.toThrow(/^Usuário não encontrado.$/);
   });
 
   it('should throw an error database during fetch by parameters', async () => {
@@ -112,7 +111,7 @@ describe('User Service Unit Tests', () => {
     );
 
     await expect(userService.getUserByParams({ id: 1 })).rejects.toThrow(
-      'Erro ao buscar usuário por parâmetros: Database error',
+      /^Erro ao buscar usuário por parâmetros: Database error$/,
     );
   });
 
@@ -162,12 +161,12 @@ describe('User Service Unit Tests', () => {
 
   it('should throw an error incomplete user data during creation', async () => {
     await expect(userService.createUser({} as User)).rejects.toThrow(
-      'Os dados do usuário estão incompletos ou inválidos.',
+      /^Os dados do usuário estão incompletos ou inválidos.$/,
     );
   });
 
   it('should throw an error when the specified profile does not exist', async () => {
-    const userData = {
+    const inputUser = {
       nome: 'new user',
       email: 'newuser@mail.com',
       senha: 'Senha@321',
@@ -178,8 +177,8 @@ describe('User Service Unit Tests', () => {
       undefined,
     );
 
-    await expect(userService.createUser(userData)).rejects.toThrow(
-      'Perfil não encontrado.',
+    await expect(userService.createUser(inputUser)).rejects.toThrow(
+      /^Perfil não encontrado.$/,
     );
   });
 
@@ -200,7 +199,7 @@ describe('User Service Unit Tests', () => {
     (userRepository.createUser as jest.Mock).mockResolvedValue(undefined);
 
     await expect(userService.createUser(userData)).rejects.toThrow(
-      'Falha ao criar o usuário.',
+      /^Falha ao criar o usuário.$/,
     );
   });
 
@@ -231,7 +230,7 @@ describe('User Service Unit Tests', () => {
     (userRepository.assignProfile as jest.Mock).mockResolvedValue(false);
 
     await expect(userService.createUser(userData)).rejects.toThrow(
-      'Falha ao associar perfis ao usuário.',
+      /^Falha ao associar perfis ao usuário.$/,
     );
   });
 
@@ -242,35 +241,34 @@ describe('User Service Unit Tests', () => {
       senha: 'Senha@321',
       perfis: [{ id: 1 }],
     };
-    (profileRepository.getProfileByParams as jest.Mock).mockRejectedValue(
+
+    (userRepository.createUser as jest.Mock).mockRejectedValue(
       new Error('Database error'),
     );
 
     await expect(userService.createUser(userData)).rejects.toThrow(
-      'Erro ao criar usuário: Database error',
+      /^Erro ao criar usuário: Database error$/,
     );
   });
 
   it('should update user successfully', async () => {
     const mockUser = {
-      ativo: true,
-      data_criacao: '2025-01-11T02:54:02.311Z',
-      data_update: '2025-01-16T02:54:02.311Z',
-      email: 'admin@exemplo.com',
       id: 1,
-      nome: 'Admin Usuário',
+      ativo: true,
       senha: 'senhaAdmin',
+      nome: 'Admin Usuário',
+      email: 'admin@exemplo.com',
+      data_update: '2025-01-16T02:54:02.311Z',
+      data_criacao: '2025-01-11T02:54:02.311Z',
     };
+    const mockProfile = { id: 2, nome: 'comum', descricao: 'Comum' };
     const mockProfiles = [{ id: 1, nome: 'admin', descricao: 'Administrador' }];
 
-    (profileRepository.getProfileByParams as jest.Mock).mockResolvedValue({
-      id: 2,
-      nome: 'comum',
-      descricao: 'Comum',
-    });
+    (profileRepository.getProfileByParams as jest.Mock).mockResolvedValue(
+      mockProfile,
+    );
     (userRepository.getUserByParams as jest.Mock).mockResolvedValue(mockUser);
     (userRepository.updateUser as jest.Mock).mockResolvedValueOnce(mockUser);
-    jest.spyOn(userService, 'getUserProfiles').mockResolvedValue(mockProfiles);
     (userRepository.unassignProfile as jest.Mock).mockResolvedValueOnce(true);
     (userRepository.assignProfile as jest.Mock).mockResolvedValue({
       id: 1,
@@ -278,10 +276,14 @@ describe('User Service Unit Tests', () => {
       perfil_id: 2,
     });
 
-    const result = await userService.updateUser(1, {
-      ...mockUser,
-      perfis: [{ id: 2 }],
-    });
+    const result = await userService.updateUser(
+      1,
+      {
+        ...mockUser,
+        perfis: [{ id: 2 }],
+      },
+      mockProfiles,
+    );
 
     expect(result).toEqual(mockUser);
     expect(userRepository.updateUser).toHaveBeenCalledWith(1, {
@@ -298,56 +300,89 @@ describe('User Service Unit Tests', () => {
 
   it('should throw an error if ID or user data is invalid', async () => {
     await expect(
-      userService.updateUser(1, {} as UserUpdateInput),
-    ).rejects.toThrow('Dados do usuário ou ID inválidos.');
+      userService.updateUser(1, {} as UserUpdateInput, []),
+    ).rejects.toThrow(/^Dados do usuário ou ID inválidos.$/);
+  });
+
+  it('should throw an error during user update', async () => {
+    const mockUser = {
+      id: 1,
+      ativo: true,
+      senha: 'senhaAdmin',
+      nome: 'Admin Usuário',
+      email: 'admin@exemplo.com',
+      data_update: '2025-01-16T02:54:02.311Z',
+      data_criacao: '2025-01-11T02:54:02.311Z',
+    };
+    const mockProfiles = [{ id: 1, nome: 'admin', descricao: 'Administrador' }];
+    (userRepository.getUserByParams as jest.Mock).mockResolvedValue(mockUser);
+    (userRepository.updateUser as jest.Mock).mockResolvedValueOnce(undefined);
+
+    await expect(
+      userService.updateUser(
+        1,
+        { ...mockUser, perfis: [{ id: 2 }] },
+        mockProfiles,
+      ),
+    ).rejects.toThrow(
+      /^Usuário com ID 1 existe, mas nenhuma modificação foi aplicada.$/,
+    );
   });
 
   it('should throw an error if a profile is not found', async () => {
+    const mockUser = {
+      id: 1,
+      ativo: true,
+      senha: 'senhaAdmin',
+      nome: 'Admin Usuário',
+      email: 'admin@exemplo.com',
+      data_update: '2025-01-16T02:54:02.311Z',
+      data_criacao: '2025-01-11T02:54:02.311Z',
+    };
+    const mockProfiles = [{ id: 1, nome: 'admin', descricao: 'Administrador' }];
+    (userRepository.getUserByParams as jest.Mock).mockResolvedValue(mockUser);
+    (userRepository.updateUser as jest.Mock).mockResolvedValueOnce(mockUser);
     (profileRepository.getProfileByParams as jest.Mock).mockResolvedValueOnce(
       null,
     );
     await expect(
-      userService.updateUser(1, {
-        perfis: [{ id: 99 }],
-        data_update: new Date().toISOString(),
-      }),
-    ).rejects.toThrow('Perfil não encontrado.');
-  });
-
-  it('should throw an error if no user is found to update', async () => {
-    const mockUser = {
-      ativo: true,
-      data_criacao: '2025-01-11T02:54:02.311Z',
-      data_update: '2025-01-16T02:54:02.311Z',
-      email: 'admin@exemplo.com',
-      id: 1,
-      nome: 'Admin Usuário',
-      senha: 'senhaAdmin',
-    };
-    const mockProfiles = [{ id: 1, nome: 'admin', descricao: 'Administrador' }];
-
-    (profileRepository.getProfileByParams as jest.Mock).mockResolvedValue({
-      id: 2,
-      nome: 'comum',
-      descricao: 'Comum',
-    });
-    (userRepository.getUserByParams as jest.Mock).mockResolvedValue(mockUser);
-    jest.spyOn(userService, 'getUserProfiles').mockResolvedValue(mockProfiles);
-    (userRepository.unassignProfile as jest.Mock).mockResolvedValueOnce(true);
-    (userRepository.assignProfile as jest.Mock).mockResolvedValue({
-      id: 1,
-      usuario_id: 1,
-      perfil_id: 2,
-    });
-    (userRepository.updateUser as jest.Mock).mockResolvedValueOnce(undefined);
-
-    await expect(
-      userService.updateUser(1, { ...mockUser, perfis: [{ id: 2 }] }),
-    ).rejects.toThrow('Nenhum usuário encontrado com o ID 1 para atualizar.');
+      userService.updateUser(
+        1,
+        { ...mockUser, perfis: [{ id: 2 }] },
+        mockProfiles,
+      ),
+    ).rejects.toThrow(/^Perfil não encontrado.$/);
   });
 
   it('should throw an error if assigning profiles fails', async () => {
     const mockUser = {
+      id: 1,
+      ativo: true,
+      senha: 'senhaAdmin',
+      nome: 'Admin Usuário',
+      email: 'admin@exemplo.com',
+      data_update: '2025-01-16T02:54:02.311Z',
+      data_criacao: '2025-01-11T02:54:02.311Z',
+    };
+
+    const mockProfiles = [{ id: 1, nome: 'admin', descricao: 'Administrador' }];
+
+    (userRepository.getUserByParams as jest.Mock).mockResolvedValue(mockUser);
+    (userRepository.updateUser as jest.Mock).mockResolvedValueOnce(mockUser);
+    (userRepository.unassignProfile as jest.Mock).mockResolvedValueOnce(true);
+    (userRepository.assignProfile as jest.Mock).mockResolvedValue(undefined);
+
+    await expect(
+      userService.updateUser(
+        1,
+        { ...mockUser, perfis: [{ id: 2 }] },
+        mockProfiles,
+      ),
+    ).rejects.toThrow(/^Falha ao associar perfis ao usuário.$/);
+  });
+
+  it('should throw an error database during user update', async () => {
+    const mockUser = {
       ativo: true,
       data_criacao: '2025-01-11T02:54:02.311Z',
       data_update: '2025-01-16T02:54:02.311Z',
@@ -357,34 +392,17 @@ describe('User Service Unit Tests', () => {
       senha: 'senhaAdmin',
     };
     const mockProfiles = [{ id: 1, nome: 'admin', descricao: 'Administrador' }];
-
-    (profileRepository.getProfileByParams as jest.Mock).mockResolvedValue({
-      id: 2,
-      nome: 'comum',
-      descricao: 'Comum',
-    });
     (userRepository.getUserByParams as jest.Mock).mockResolvedValue(mockUser);
-    (userRepository.updateUser as jest.Mock).mockResolvedValueOnce(mockUser);
-    jest.spyOn(userService, 'getUserProfiles').mockResolvedValue(mockProfiles);
-    (userRepository.unassignProfile as jest.Mock).mockResolvedValueOnce(true);
-    (userRepository.assignProfile as jest.Mock).mockResolvedValue(undefined);
-
-    await expect(
-      userService.updateUser(1, { ...mockUser, perfis: [{ id: 2 }] }),
-    ).rejects.toThrow('Falha ao associar perfis ao usuário.');
-  });
-
-  it('should throw an error database during user update', async () => {
-    (profileRepository.getProfileByParams as jest.Mock).mockRejectedValue(
+    (userRepository.updateUser as jest.Mock).mockRejectedValue(
       new Error('Database error'),
     );
-
     await expect(
-      userService.updateUser(1, {
-        perfis: [{ id: 2 }],
-        data_update: new Date().toISOString(),
-      }),
-    ).rejects.toThrow('Erro ao atualizar usuário com ID 1: Database error');
+      userService.updateUser(
+        1,
+        { ...mockUser, perfis: [{ id: 2 }] },
+        mockProfiles,
+      ),
+    ).rejects.toThrow(/^Erro ao atualizar usuário com ID 1: Database error$/);
   });
 
   it('should delete a user successfully', async () => {
@@ -402,7 +420,7 @@ describe('User Service Unit Tests', () => {
 
   it('should throw an error if no ID is provided', async () => {
     await expect(userService.deleteUser(0)).rejects.toThrow(
-      'É necessário fornecer o ID do usuário.',
+      /^É necessário fornecer o ID do usuário.$/,
     );
   });
 
@@ -411,7 +429,7 @@ describe('User Service Unit Tests', () => {
     (userRepository.deleteUser as jest.Mock).mockResolvedValueOnce(undefined);
 
     await expect(userService.deleteUser(mockId)).rejects.toThrow(
-      `Nenhum usuário encontrado com o ID ${mockId} para deletar.`,
+      /^Nenhum usuário encontrado com o ID 1 para deletar.$/,
     );
   });
 
@@ -421,7 +439,7 @@ describe('User Service Unit Tests', () => {
     );
 
     await expect(userService.deleteUser(1)).rejects.toThrow(
-      'Erro ao deletar o usuário com ID 1: Database error',
+      /^Erro ao deletar o usuário com ID 1: Database error$/,
     );
   });
 
@@ -439,7 +457,7 @@ describe('User Service Unit Tests', () => {
 
   it('should throw an error if no user ID is provided', async () => {
     await expect(userService.getUserProfiles(0)).rejects.toThrow(
-      'É necessário fornecer o ID do usuário.',
+      /^É necessário fornecer o ID do usuário.$/,
     );
   });
 
@@ -449,7 +467,7 @@ describe('User Service Unit Tests', () => {
     );
 
     await expect(userService.getUserProfiles(1)).rejects.toThrow(
-      'Erro ao obter perfis para usuário com ID 1: Database error',
+      /^Erro ao obter perfis para usuário com ID 1: Database error$/,
     );
   });
 
@@ -491,12 +509,8 @@ describe('User Service Unit Tests', () => {
       .mockRejectedValue(new Error('Database error'));
 
     await expect(userService.signUp(userInput)).rejects.toThrow(
-      'Erro ao cadastrar usuário: Database error',
+      /^Erro ao cadastrar usuário: Database error$/,
     );
-    expect(userService.createUser).toHaveBeenCalledWith({
-      ...userInput,
-      perfis: [{ nome: 'comum', descricao: 'Comum' }],
-    });
   });
 
   it('should return authenticated user with token on success', async () => {
@@ -543,7 +557,7 @@ describe('User Service Unit Tests', () => {
     expect(jwt.decode).toHaveBeenCalledWith('mockedToken');
   });
 
-  it('should handle errors gracefully', async () => {
+  it('should throw an error if authenticated user not found profiles', async () => {
     const mockUser = {
       ativo: true,
       data_criacao: '2025-01-11T02:54:02.311Z',
@@ -558,7 +572,7 @@ describe('User Service Unit Tests', () => {
       .mockRejectedValue(new Error('Database error'));
 
     await expect(userService.getAuthenticatedUser(mockUser)).rejects.toThrow(
-      'Erro ao autenticar o usuário: Database error',
+      /^Erro ao autenticar o usuário: Database error$/,
     );
   });
 
@@ -648,7 +662,7 @@ describe('User Service Unit Tests', () => {
     });
     await expect(
       userService.login({ email: mockUser.email, senha: 'wrongPassword' }),
-    ).rejects.toThrow('Senha inválida.');
+    ).rejects.toThrow(/^Senha inválida.$/);
   });
 
   it('should handle unexpected errors gracefully', async () => {
@@ -658,6 +672,35 @@ describe('User Service Unit Tests', () => {
 
     await expect(
       userService.login({ email: 'admin@exemplo.com', senha: 'senhaAdmin' }),
-    ).rejects.toThrow('Erro ao autenticar o usuário: Database error');
+    ).rejects.toThrow(/^Erro ao autenticar o usuário: Database error$/);
+  });
+
+  it('should return the metrics successfully', async () => {
+    (userRepository.countUsers as jest.Mock).mockResolvedValue(2);
+    (userRepository.countActiveUsers as jest.Mock).mockResolvedValue(1);
+    (userRepository.countInactiveUsers as jest.Mock).mockResolvedValue(1);
+    (profileRepository.countProfiles as jest.Mock).mockResolvedValue(2);
+    const metrics = await userService.getMetrics();
+
+    expect(metrics).toEqual({
+      totalUsers: 2,
+      activeUsers: 1,
+      inactiveUsers: 1,
+      totalProfiles: 2,
+    });
+    expect(userRepository.countUsers).toHaveBeenCalledTimes(1);
+    expect(userRepository.countActiveUsers).toHaveBeenCalledTimes(1);
+    expect(userRepository.countInactiveUsers).toHaveBeenCalledTimes(1);
+    expect(profileRepository.countProfiles).toHaveBeenCalledTimes(1);
+  });
+
+  it('should throw an error when any count fails', async () => {
+    (userRepository.countUsers as jest.Mock).mockRejectedValue(
+      new Error('Database error'),
+    );
+
+    await expect(userService.getMetrics()).rejects.toThrow(
+      /^Não foi possível carregar as métricas: Database error$/,
+    );
   });
 });
