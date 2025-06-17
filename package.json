@@ -19,7 +19,6 @@
     "test": "jest --verbose --runInBand --detectOpenHandles --forceExit",
     "knex:reset": "yarn knex:rollback && yarn knex:migrate && yarn knex:seed",
     "test:silent": "jest --silent --runInBand --detectOpenHandles --forceExit",
-    "prebuild": "npm run test:silent",
     "build": "swc src -d dist --copy-files --strip-leading-paths",
     "start": "node dist/index.js",
     "build:watch": "swc src -d dist --watch",
