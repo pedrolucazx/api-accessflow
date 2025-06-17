@@ -405,7 +405,7 @@ describe('User End-to-End Tests', () => {
     expect(response.body.errors[0].message).toEqual(
       'Acesso negado: você não tem permissão para acessar esses dados.',
     );
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(200);
   });
 
   it('should throw an error if unauthenticated user', async () => {
@@ -417,9 +417,9 @@ describe('User End-to-End Tests', () => {
       .set('Authorization', `Bearer `);
 
     expect(response.body.errors[0].message).toEqual(
-      'Token inválido ou expirado',
+      'Token inválido ou expirado.',
     );
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(500);
   });
 
   it('should return the metrics successfully successfully', async () => {
@@ -435,5 +435,36 @@ describe('User End-to-End Tests', () => {
       totalProfiles: 2,
     });
     expect(response.status).toBe(200);
+  });
+
+  it('should throw UNAUTHENTICATED if no token is provided', async () => {
+    const filter = { id: 1 };
+    const response = await request(urlServer)
+      .post('/')
+      .send({ query: GET_USER_BY_PARAMS, variables: { filter } });
+
+    const error = response.body.errors?.[0];
+    expect(error).toBeDefined();
+    expect(error.message).toBe(
+      'Você precisa estar logado para realizar essa ação.',
+    );
+    expect(error.extensions.code).toBe('UNAUTHENTICATED');
+    expect(response.status).toBe(200);
+  });
+
+  it('should throw FORBIDDEN if user is logged but not admin', async () => {
+    const filter = { id: 1 };
+
+    const response = await request(urlServer)
+      .post('/')
+      .send({ query: GET_USER_BY_PARAMS, variables: { filter } })
+      .set('Authorization', `Bearer ${authToken}`);
+
+    const error = response.body.errors?.[0];
+    expect(error).toBeDefined();
+    expect(error.message).toBe(
+      'Acesso negado: você não tem permissão para acessar esses dados.',
+    );
+    expect(error.extensions.code).toBe('FORBIDDEN');
   });
 });

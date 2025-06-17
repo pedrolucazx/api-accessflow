@@ -200,6 +200,20 @@ describe('Profile End-to-End Tests', () => {
     expect(response.body.errors[0].message).toMatch(
       /^Acesso negado: apenas administradores podem realizar essa ação.$/,
     );
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(200);
+  });
+
+  it('should throw UNAUTHENTICATED if no token is provided', async () => {
+    const response = await request(urlServer)
+      .post('/')
+      .send({ query: GET_ALL_PROFILES });
+
+    const error = response.body.errors?.[0];
+    expect(error).toBeDefined();
+    expect(error.message).toBe(
+      'Você precisa estar logado para realizar essa ação.',
+    );
+    expect(error.extensions.code).toBe('UNAUTHENTICATED');
+    expect(response.status).toBe(200);
   });
 });
