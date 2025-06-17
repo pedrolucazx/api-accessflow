@@ -19,12 +19,13 @@
     "test": "jest --verbose --runInBand --detectOpenHandles --forceExit",
     "knex:reset": "yarn knex:rollback && yarn knex:migrate && yarn knex:seed",
     "test:silent": "jest --silent --runInBand --detectOpenHandles --forceExit",
+    "prebuild": "npm run test:silent",
     "build": "swc src -d dist --copy-files --strip-leading-paths",
+    "start": "node dist/index.js",
     "build:watch": "swc src -d dist --watch",
     "type-check": "tsc --noEmit",
     "dev:swc": "npm run build:watch",
-    "start": "node dist/index.js",
-    "dev": "concurrently \"npm run build:watch\" \"nodemon --watch dist --exec node dist/index.js\""
+    "dev": "concurrently \"npm run build --watch\" \"nodemon --watch dist --exec node dist/index.js\""
   },
   "keywords": [],
   "author": "",
@@ -34,6 +35,7 @@
     "@apollo/server": "^4.11.2",
     "@graphql-tools/load-files": "^7.0.0",
     "@graphql-tools/merge": "^9.0.12",
+    "@swc/jest": "^0.2.38",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
     "graphql": "^16.9.0",
