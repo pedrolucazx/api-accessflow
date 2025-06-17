@@ -50,6 +50,39 @@ Este projeto é uma API de gerenciamento de usuários e perfis com GraphQL, cons
 
 ---
 
+## 🔐 Autenticação com JWT
+
+O projeto utiliza **JWT (JSON Web Tokens)** para autenticação e autorização, protegendo rotas sensíveis e garantindo que apenas usuários autenticados (e com perfil adequado) possam realizar determinadas ações.
+
+### **Cadastro de Usuário**
+
+- Endpoint GraphQL para cadastrar novos usuários com perfil inicial padrão de `comum`.
+
+### **Login de Usuário**
+
+- Endpoint GraphQL que autentica o usuário a partir de e-mail e senha válidos.
+- Após a autenticação, é gerado um token JWT contendo os dados essenciais do usuário, incluindo seus perfis.
+
+### **Uso do Token**
+
+- O token JWT deve ser enviado no cabeçalho `Authorization` das requisições autenticadas, no formato:
+  ```
+  Authorization: Bearer <token>
+  ```
+
+### **Validação do Token**
+
+- O token é decodificado e validado automaticamente no contexto GraphQL de cada requisição.
+- Em caso de token inválido ou expirado, a API responde com erro `UNAUTHENTICATED`.
+
+### **Controle de Acesso por Perfil**
+
+- Usuários com o perfil `admin` podem realizar ações administrativas, como listar, editar ou excluir qualquer usuário.
+- Usuários comuns só podem acessar ou editar seus próprios dados.
+- As regras de acesso são aplicadas diretamente no contexto da API, garantindo segurança e controle baseado nos perfis do usuário autenticado.
+
+---
+
 ## 🚀 Instruções de Execução
 
 ### **Configuração do Ambiente**
