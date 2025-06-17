@@ -32,7 +32,7 @@ const resolvers = {
       args: argsType,
       context: Context,
     ): Promise<User | undefined> => {
-      context.validateUserAccess(args!.filter!.id!);
+      context.validateUserAccess(args.filter.id!);
       return await userService.getUserByParams(args?.filter);
     },
     login: async (
@@ -44,9 +44,8 @@ const resolvers = {
     getMetrics: async (
       _obj: unknown,
       _args: argsType,
-      context: Context,
+      _context: Context,
     ): Promise<Metrics | undefined> => {
-      context.validateAdmin();
       return await userService.getMetrics();
     },
   },

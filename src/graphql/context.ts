@@ -14,45 +14,57 @@ export async function createContext({
   req: { headers: { authorization?: string } };
 }): Promise<Context> {
   let user: AuthenticatedUser | null = null;
+  const authHeader = req.headers.authorization || '';
 
-  const token = req.headers.authorization || '';
-
-  if (token) {
+  if (authHeader) {
     try {
-      const actualToken = token.replace('Bearer ', '');
-      user = jwt.verify(
-        actualToken,
-        process.env.JWT_SECRET!,
-      ) as AuthenticatedUser;
+      const token = authHeader.replace('Bearer ', '');
+      user = jwt.verify(token, process.env.JWT_SECRET!) as AuthenticatedUser;
     } catch (error) {
       console.error(error);
-      throw new GraphQLError('Token inválido ou expirado', {
-        extensions: { code: 'UNAUTHENTICATED', http: { status: 401 } },
+      throw new GraphQLError('Token inválido ou expirado.', {
+        extensions: { code: 'UNAUTHENTICATED' },
       });
     }
   }
 
-  const isAdmin = () => {
-    return user?.perfis?.some((profile) => profile.nome === 'admin');
-  };
+  const isAdmin = () => user?.perfis?.some((p) => p.nome === 'admin');
 
   const validateAdmin = () => {
-    if (!user || !isAdmin()) {
+    if (!user) {
+      throw new GraphQLError(
+        'Você precisa estar logado para realizar essa ação.',
+        {
+          extensions: { code: 'UNAUTHENTICATED' },
+        },
+      );
+    }
+
+    if (!isAdmin()) {
       throw new GraphQLError(
         'Acesso negado: apenas administradores podem realizar essa ação.',
         {
-          extensions: { code: 'UNAUTHENTICATED', http: { status: 401 } },
+          extensions: { code: 'FORBIDDEN' },
         },
       );
     }
   };
 
-  const validateUserAccess = (userId: number) => {
-    if (!isAdmin() && user?.id !== userId) {
+  const validateUserAccess = (userId?: number) => {
+    if (!user) {
+      throw new GraphQLError(
+        'Você precisa estar logado para realizar essa ação.',
+        {
+          extensions: { code: 'UNAUTHENTICATED' },
+        },
+      );
+    }
+
+    if (user?.id !== userId && !isAdmin()) {
       throw new GraphQLError(
         'Acesso negado: você não tem permissão para acessar esses dados.',
         {
-          extensions: { code: 'UNAUTHENTICATED', http: { status: 401 } },
+          extensions: { code: 'FORBIDDEN' },
         },
       );
     }
