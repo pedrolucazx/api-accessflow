@@ -1,11 +1,11 @@
-import { profileRepository } from '@/repositories/profile.repository';
-import { userRepository } from '@/repositories/user.repository';
-import { userService } from '@/service/user.service';
-import { User, UserUpdateInput } from '@/types/users.types';
+import { profileRepository } from '../../../repositories/profile.repository';
+import { userRepository } from '../../../repositories/user.repository';
+import { userService } from '../../../service/user.service';
+import { User, UserUpdateInput } from '../../../types/users.types';
 import jwt from 'jsonwebtoken';
 
-jest.mock('@/repositories/user.repository');
-jest.mock('@/repositories/profile.repository');
+jest.mock('../../../repositories/user.repository');
+jest.mock('../../../repositories/profile.repository');
 jest.mock('jsonwebtoken');
 
 describe('User Service Unit Tests', () => {

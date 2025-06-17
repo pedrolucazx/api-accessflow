@@ -1,6 +1,6 @@
-import { database } from '@/database';
-import { profileRepository } from '@/repositories/profile.repository';
-import type { Profile } from '@/types/profiles.types';
+import { database } from '../../../database';
+import { profileRepository } from '../../../repositories/profile.repository';
+import type { Profile } from '../../../types/profiles.types';
 
 describe('Profile Model Integration Tests', () => {
   let latestProfile: Pick<Profile, 'id'> | undefined;

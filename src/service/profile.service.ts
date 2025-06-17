@@ -1,4 +1,4 @@
-import { CustomError, handleError } from '../../src/utils/handleError';
+import { CustomError, handleError } from '../utils/handleError';
 import { profileRepository } from '../repositories/profile.repository';
 import {
   Profile,

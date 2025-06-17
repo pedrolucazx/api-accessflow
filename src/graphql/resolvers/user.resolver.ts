@@ -1,4 +1,4 @@
-import { Profile } from '@/types/profiles.types';
+import { Profile } from '../../types/profiles.types';
 import { userService } from '../../service/user.service';
 import {
   argsType,

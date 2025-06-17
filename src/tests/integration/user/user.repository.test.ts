@@ -1,6 +1,6 @@
-import { database } from '@/database';
-import { userRepository } from '@/repositories/user.repository';
-import { User, UserInput, UserUpdateInput } from '@/types/users.types';
+import { database } from '../../../database';
+import { userRepository } from '../../../repositories/user.repository';
+import { User, UserInput, UserUpdateInput } from '../../../types/users.types';
 
 describe('User Repository Integration Tests', () => {
   let latestUser: Pick<User, 'id'> | undefined;

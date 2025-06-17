@@ -1,11 +1,11 @@
-import { database } from '@/database';
-import { userService } from '@/service/user.service';
+import { database } from '../../../database';
+import { userService } from '../../../service/user.service';
 import {
   SignUpInput,
   User,
   UserInput,
   UserUpdateInput,
-} from '@/types/users.types';
+} from '../../../types/users.types';
 
 describe('User Service Integration Tests', () => {
   let latestUser: Pick<User, 'id'> | undefined;

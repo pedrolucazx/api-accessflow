@@ -1,6 +1,6 @@
-import { database } from '@/database';
-import { profileService } from '@/service/profile.service';
-import { Profile, ProfileInput } from '@/types/profiles.types';
+import { database } from '../../../database';
+import { profileService } from '../../../service/profile.service';
+import { Profile, ProfileInput } from '../../../types/profiles.types';
 
 describe('Profile Service Integration Tests', () => {
   let latestProfile: Pick<Profile, 'id'> | undefined;

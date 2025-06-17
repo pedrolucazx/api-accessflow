@@ -1,13 +1,13 @@
-import { database } from '@/database';
-import { userRepository } from '@/repositories/user.repository';
+import { database } from '../../../database';
+import { userRepository } from '../../../repositories/user.repository';
 import {
   User,
   UserInput,
   UserProfileAssignment,
   UserUpdateInput,
-} from '@/types/users.types';
+} from '../../../types/users.types';
 
-jest.mock('@/database');
+jest.mock('../../../database');
 
 const createMockConnection = () => ({
   select: jest.fn().mockReturnThis(),

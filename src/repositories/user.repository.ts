@@ -1,4 +1,4 @@
-import { Profile } from '@/types/profiles.types';
+import { Profile } from '../types/profiles.types';
 import { database } from '../database';
 import type {
   AssignedProfile,

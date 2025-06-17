@@ -1,7 +1,7 @@
-import { Context } from '@/graphql/context';
-import startApolloServer from '@/server';
 import { ApolloServer } from '@apollo/server';
 import request from 'supertest';
+import { Context } from '../../graphql/context';
+import startApolloServer from '../../server';
 
 jest.setTimeout(50000);
 

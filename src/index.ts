@@ -1,4 +1,4 @@
-import startApolloServer from '../src/server';
+import startApolloServer from './server';
 
 async function start() {
   try {
